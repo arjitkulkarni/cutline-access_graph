@@ -1,0 +1,634 @@
+{
+  "repair_id": "rp_7c41e2d9",
+  "status": "VERIFIED",
+  "stale": true,
+  "stale_reason": "Policy moved from r3 to r4 after this evidence was produced.",
+  "base_revision": {
+    "revision": 3,
+    "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+    "updated_at": "2026-10-16T00:12:00.000Z"
+  },
+  "current_revision": {
+    "revision": 4,
+    "hash": "sha256:9b27e40c1d5af6830e7b2c94a1f5d8e3b6c0a7f2e9d4c1b8a5f3e6d0c2b9a714",
+    "updated_at": "2026-10-16T00:58:00.000Z"
+  },
+  "contract": {
+    "must_deny": [
+      {
+        "principal": "maya",
+        "capability": "export_customers",
+        "source": "guardrail:no_support_bulk_export"
+      },
+      {
+        "principal": "noah",
+        "capability": "export_customers",
+        "source": "guardrail:no_support_bulk_export"
+      }
+    ],
+    "must_allow": [
+      {
+        "principal": "dsar_bot",
+        "capability": "export_customers",
+        "source": "workflow:dsar_fulfilment"
+      },
+      {
+        "principal": "felix",
+        "capability": "export_customers",
+        "source": "workflow:finance_close"
+      },
+      {
+        "principal": "maya",
+        "capability": "generate_reports",
+        "source": "workflow:order_support"
+      },
+      {
+        "principal": "maya",
+        "capability": "view_orders",
+        "source": "workflow:order_support"
+      },
+      {
+        "principal": "noah",
+        "capability": "generate_reports",
+        "source": "workflow:order_support"
+      },
+      {
+        "principal": "noah",
+        "capability": "view_orders",
+        "source": "workflow:order_support"
+      }
+    ]
+  },
+  "edits": [
+    {
+      "op": "CREATE_ROLE",
+      "role": "support_safe",
+      "name": "Support (safe)",
+      "reason": "Least-privilege home for Maya Chen, Noah Patel: only what they still need, no route to the forbidden capability"
+    },
+    {
+      "op": "ADD_GRANT",
+      "role": "support_safe",
+      "capability": "generate_reports",
+      "reason": "Grant generate_reports directly — preserves the order support workflow"
+    },
+    {
+      "op": "ADD_GRANT",
+      "role": "support_safe",
+      "capability": "view_orders",
+      "reason": "Grant view_orders directly — preserves the order support workflow"
+    },
+    {
+      "op": "ASSIGN_ROLE",
+      "principal": "maya",
+      "role": "support_safe",
+      "reason": "Move Maya Chen onto the scoped role"
+    },
+    {
+      "op": "ASSIGN_ROLE",
+      "principal": "noah",
+      "role": "support_safe",
+      "reason": "Move Noah Patel onto the scoped role"
+    },
+    {
+      "op": "UNASSIGN_ROLE",
+      "principal": "maya",
+      "role": "support",
+      "reason": "Removes Maya Chen's entry into every forbidden path through Support"
+    },
+    {
+      "op": "UNASSIGN_ROLE",
+      "principal": "noah",
+      "role": "support",
+      "reason": "Removes Noah Patel's entry into every forbidden path through Support"
+    }
+  ],
+  "permissions_removed": [
+    {
+      "principal": "maya",
+      "capability": "export_customers"
+    },
+    {
+      "principal": "noah",
+      "capability": "export_customers"
+    }
+  ],
+  "workflows_preserved": [
+    {
+      "workflow": "dsar_fulfilment",
+      "principal": "dsar_bot",
+      "capability": "export_customers",
+      "ok": true
+    },
+    {
+      "workflow": "finance_close",
+      "principal": "felix",
+      "capability": "export_customers",
+      "ok": true
+    },
+    {
+      "workflow": "order_support",
+      "principal": "maya",
+      "capability": "generate_reports",
+      "ok": true
+    },
+    {
+      "workflow": "order_support",
+      "principal": "maya",
+      "capability": "view_orders",
+      "ok": true
+    },
+    {
+      "workflow": "order_support",
+      "principal": "noah",
+      "capability": "generate_reports",
+      "ok": true
+    },
+    {
+      "workflow": "order_support",
+      "principal": "noah",
+      "capability": "view_orders",
+      "ok": true
+    }
+  ],
+  "candidate_verification": {
+    "id": "vf_3d0a91c4",
+    "kind": "candidate",
+    "policy_target": "candidate:rp_7c41e2d9",
+    "graph": "cutline_dev__cand__rp_7c41e2d9__c5",
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    },
+    "started_at": "2026-10-16T00:24:00.000Z",
+    "finished_at": "2026-10-16T00:24:01.840Z",
+    "passed": true,
+    "checks": [
+      {
+        "id": "maya:view_orders",
+        "principal": "maya",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_aea56921",
+        "latency_ms": 5,
+        "passed": true
+      },
+      {
+        "id": "maya:generate_reports",
+        "principal": "maya",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_ed1d9030",
+        "latency_ms": 5.6,
+        "passed": true
+      },
+      {
+        "id": "maya:export_customers",
+        "principal": "maya",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_2b95b740",
+        "latency_ms": 6.9,
+        "passed": true
+      },
+      {
+        "id": "noah:view_orders",
+        "principal": "noah",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_6a0dde4f",
+        "latency_ms": 7.5,
+        "passed": true
+      },
+      {
+        "id": "noah:generate_reports",
+        "principal": "noah",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_a886055e",
+        "latency_ms": 8.1,
+        "passed": true
+      },
+      {
+        "id": "noah:export_customers",
+        "principal": "noah",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_e6fe2c6d",
+        "latency_ms": 3.8,
+        "passed": true
+      },
+      {
+        "id": "felix:view_orders",
+        "principal": "felix",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_2576537d",
+        "latency_ms": 4.4,
+        "passed": true
+      },
+      {
+        "id": "felix:generate_reports",
+        "principal": "felix",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_63ee7a8c",
+        "latency_ms": 5.6,
+        "passed": true
+      },
+      {
+        "id": "felix:export_customers",
+        "principal": "felix",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_a266a19b",
+        "latency_ms": 6.3,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:view_orders",
+        "principal": "dsar_bot",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_e0dec8aa",
+        "latency_ms": 6.9,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:generate_reports",
+        "principal": "dsar_bot",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_1f56efba",
+        "latency_ms": 8.1,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:export_customers",
+        "principal": "dsar_bot",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_5dcf16c9",
+        "latency_ms": 3.2,
+        "passed": true
+      }
+    ],
+    "baseline_checks": [
+      {
+        "id": "maya:view_orders",
+        "principal": "maya",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_9c473dd8",
+        "latency_ms": 3.8,
+        "passed": true
+      },
+      {
+        "id": "maya:generate_reports",
+        "principal": "maya",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_dabf64e7",
+        "latency_ms": 5,
+        "passed": true
+      },
+      {
+        "id": "maya:export_customers",
+        "principal": "maya",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_19378bf7",
+        "latency_ms": 5.6,
+        "passed": true
+      },
+      {
+        "id": "noah:view_orders",
+        "principal": "noah",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_57afb306",
+        "latency_ms": 6.9,
+        "passed": true
+      },
+      {
+        "id": "noah:generate_reports",
+        "principal": "noah",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_9627da15",
+        "latency_ms": 7.5,
+        "passed": true
+      },
+      {
+        "id": "noah:export_customers",
+        "principal": "noah",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_d4a00124",
+        "latency_ms": 8.1,
+        "passed": true
+      },
+      {
+        "id": "felix:view_orders",
+        "principal": "felix",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_13182834",
+        "latency_ms": 3.8,
+        "passed": true
+      },
+      {
+        "id": "felix:generate_reports",
+        "principal": "felix",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "deny",
+        "graph_prediction": "deny",
+        "status_code": 403,
+        "decision": "deny",
+        "engine": "reference",
+        "decision_id": "dec_51904f43",
+        "latency_ms": 4.4,
+        "passed": true
+      },
+      {
+        "id": "felix:export_customers",
+        "principal": "felix",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_90087652",
+        "latency_ms": 5,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:view_orders",
+        "principal": "dsar_bot",
+        "capability": "view_orders",
+        "method": "GET",
+        "path": "/demo/orders",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_ce809d61",
+        "latency_ms": 6.3,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:generate_reports",
+        "principal": "dsar_bot",
+        "capability": "generate_reports",
+        "method": "GET",
+        "path": "/demo/reports",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_0cf8c471",
+        "latency_ms": 6.9,
+        "passed": true
+      },
+      {
+        "id": "dsar_bot:export_customers",
+        "principal": "dsar_bot",
+        "capability": "export_customers",
+        "method": "POST",
+        "path": "/demo/customers/export",
+        "expected": "allow",
+        "graph_prediction": "allow",
+        "status_code": 200,
+        "decision": "allow",
+        "engine": "reference",
+        "decision_id": "dec_4b70eb80",
+        "latency_ms": 8.1,
+        "passed": true
+      }
+    ]
+  },
+  "post_apply_verification": null,
+  "approval": null,
+  "application": null,
+  "rejected_candidates": [
+    {
+      "id": "c1",
+      "title": "Detach Shared Ops from Support",
+      "outcome": "FAIL_FORBIDDEN_PATH",
+      "first_violation": {
+        "kind": "FORBIDDEN_PATH",
+        "principal": "maya",
+        "capability": "export_customers",
+        "path": {
+          "nodes": [
+            "maya",
+            "support",
+            "export_helper",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "maya|ASSIGNED_TO|support",
+            "support|INHERITS|export_helper",
+            "export_helper|GRANTS|export_customers"
+          ]
+        },
+        "broken_by": [],
+        "workflow": null
+      }
+    },
+    {
+      "id": "c2",
+      "title": "Revoke export_customers from Export Helper",
+      "outcome": "FAIL_FORBIDDEN_PATH",
+      "first_violation": {
+        "kind": "FORBIDDEN_PATH",
+        "principal": "maya",
+        "capability": "export_customers",
+        "path": {
+          "nodes": [
+            "maya",
+            "support",
+            "shared_ops",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "maya|ASSIGNED_TO|support",
+            "support|INHERITS|shared_ops",
+            "shared_ops|GRANTS|export_customers"
+          ]
+        },
+        "broken_by": [],
+        "workflow": null
+      }
+    },
+    {
+      "id": "c3",
+      "title": "Revoke export_customers from Shared Ops",
+      "outcome": "FAIL_REQUIRED_WORKFLOW",
+      "first_violation": {
+        "kind": "REQUIRED_LOST",
+        "principal": "felix",
+        "capability": "export_customers",
+        "path": null,
+        "broken_by": [
+          "revoke export_customers from shared_ops"
+        ],
+        "workflow": "finance_close"
+      }
+    },
+    {
+      "id": "c4",
+      "title": "Detach Export Helper from Support + Detach Shared Ops from Support",
+      "outcome": "FAIL_REQUIRED_WORKFLOW",
+      "first_violation": {
+        "kind": "REQUIRED_LOST",
+        "principal": "dsar_bot",
+        "capability": "export_customers",
+        "path": null,
+        "broken_by": [
+          "detach export_helper from support",
+          "detach shared_ops from support"
+        ],
+        "workflow": "dsar_fulfilment"
+      }
+    }
+  ],
+  "graphs": {
+    "active": "cutline_dev",
+    "candidate": "cutline_dev__cand__rp_7c41e2d9__c5",
+    "ledger": "cutline_dev__ledger"
+  },
+  "generated_at": "2026-10-16T00:59:00.000Z"
+}

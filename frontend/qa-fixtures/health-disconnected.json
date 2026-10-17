@@ -1,0 +1,21 @@
+{
+  "status": "degraded",
+  "falkordb": {
+    "connected": false,
+    "host": "localhost:6379",
+    "graph": "cutline_dev",
+    "latency_ms": null,
+    "error": "Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it."
+  },
+  "demo_mode": true,
+  "authz_engine": {
+    "name": "reference",
+    "available": true,
+    "detail": null
+  },
+  "llm": {
+    "configured": false,
+    "model": null
+  },
+  "version": "0.1.0"
+}

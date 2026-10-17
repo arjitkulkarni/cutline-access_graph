@@ -1,0 +1,45 @@
+{
+  "mode": "deterministic",
+  "model": null,
+  "repair_id": "rp_7c41e2d9",
+  "narrative": "Maya Chen and Noah Patel reach export_customers through Shared Ops and Export Helper. Every single cut either leaves one route open or breaks Finance close / DSAR fulfilment, so the plan moves both agents to a scoped Support (safe) role. FalkorDB confirmed the candidate on an isolated copy and all 12 runtime checks passed.",
+  "steps": [
+    {
+      "tool": "get_policy_revision",
+      "input": {},
+      "summary": "Active policy r3 (sha256:4f1c9a2e…)",
+      "ms": 3.9
+    },
+    {
+      "tool": "find_risky_paths",
+      "input": {
+        "capability": "export_customers"
+      },
+      "summary": "2 principals reach export_customers against no_support_bulk_export · 4 paths",
+      "ms": 18.4
+    },
+    {
+      "tool": "derive_contract",
+      "input": {},
+      "summary": "2 must-deny and 6 must-allow pairs from 1 guardrail and 3 workflows",
+      "ms": 6.1
+    },
+    {
+      "tool": "plan_repair",
+      "input": {
+        "max_candidates": 24,
+        "max_depth": 6
+      },
+      "summary": "5 candidates evaluated on isolated graphs; c5 passes at cost 8 → rp_7c41e2d9",
+      "ms": 412.6
+    },
+    {
+      "tool": "verify_candidate",
+      "input": {
+        "repair_id": "rp_7c41e2d9"
+      },
+      "summary": "12/12 runtime checks passed via the reference engine",
+      "ms": 1840.2
+    }
+  ]
+}

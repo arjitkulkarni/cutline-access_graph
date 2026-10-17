@@ -1,0 +1,8 @@
+[
+  {
+    "id": "customer-ops",
+    "name": "Customer Operations",
+    "description": "Support agents inherit bulk customer export through two role paths. Finance and the DSAR bot legitimately depend on the same roles.",
+    "active": true
+  }
+]

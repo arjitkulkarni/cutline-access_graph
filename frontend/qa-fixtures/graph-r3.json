@@ -1,0 +1,273 @@
+{
+  "revision": {
+    "revision": 3,
+    "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+    "updated_at": "2026-10-16T00:12:00.000Z"
+  },
+  "nodes": [
+    {
+      "id": "maya",
+      "kind": "user",
+      "label": "Maya Chen",
+      "props": {
+        "department": "support",
+        "principal_type": "human",
+        "title": "Support agent"
+      }
+    },
+    {
+      "id": "noah",
+      "kind": "user",
+      "label": "Noah Patel",
+      "props": {
+        "department": "support",
+        "principal_type": "human",
+        "title": "Support agent"
+      }
+    },
+    {
+      "id": "felix",
+      "kind": "user",
+      "label": "Felix Romero",
+      "props": {
+        "department": "finance",
+        "principal_type": "human",
+        "title": "Finance analyst"
+      }
+    },
+    {
+      "id": "dsar_bot",
+      "kind": "user",
+      "label": "DSAR Bot",
+      "props": {
+        "department": "support",
+        "principal_type": "service",
+        "title": "Fulfils data-subject access requests"
+      }
+    },
+    {
+      "id": "support",
+      "kind": "role",
+      "label": "Support",
+      "props": {
+        "description": "Front-line customer support",
+        "origin": "idp"
+      }
+    },
+    {
+      "id": "shared_ops",
+      "kind": "role",
+      "label": "Shared Ops",
+      "props": {
+        "description": "Operations bundle shared by Support and Finance",
+        "origin": "idp"
+      }
+    },
+    {
+      "id": "export_helper",
+      "kind": "role",
+      "label": "Export Helper",
+      "props": {
+        "description": "Attached to Support so the DSAR bot could export customer records",
+        "origin": "idp"
+      }
+    },
+    {
+      "id": "finance",
+      "kind": "role",
+      "label": "Finance",
+      "props": {
+        "description": "Finance operations",
+        "origin": "idp"
+      }
+    },
+    {
+      "id": "view_orders",
+      "kind": "capability",
+      "label": "View orders",
+      "props": {
+        "sensitivity": "internal",
+        "method": "GET",
+        "endpoint": "/demo/orders"
+      }
+    },
+    {
+      "id": "generate_reports",
+      "kind": "capability",
+      "label": "Generate reports",
+      "props": {
+        "sensitivity": "internal",
+        "method": "GET",
+        "endpoint": "/demo/reports"
+      }
+    },
+    {
+      "id": "export_customers",
+      "kind": "capability",
+      "label": "Export customers",
+      "props": {
+        "sensitivity": "restricted",
+        "method": "POST",
+        "endpoint": "/demo/customers/export"
+      }
+    },
+    {
+      "id": "orders",
+      "kind": "resource",
+      "label": "Orders",
+      "props": {
+        "classification": "internal"
+      }
+    },
+    {
+      "id": "reports",
+      "kind": "resource",
+      "label": "Reports",
+      "props": {
+        "classification": "internal"
+      }
+    },
+    {
+      "id": "customer_records",
+      "kind": "resource",
+      "label": "Customer records",
+      "props": {
+        "classification": "restricted"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "maya|ASSIGNED_TO|support",
+      "source": "maya",
+      "target": "support",
+      "type": "ASSIGNED_TO"
+    },
+    {
+      "id": "noah|ASSIGNED_TO|support",
+      "source": "noah",
+      "target": "support",
+      "type": "ASSIGNED_TO"
+    },
+    {
+      "id": "dsar_bot|ASSIGNED_TO|support",
+      "source": "dsar_bot",
+      "target": "support",
+      "type": "ASSIGNED_TO"
+    },
+    {
+      "id": "felix|ASSIGNED_TO|finance",
+      "source": "felix",
+      "target": "finance",
+      "type": "ASSIGNED_TO"
+    },
+    {
+      "id": "support|INHERITS|shared_ops",
+      "source": "support",
+      "target": "shared_ops",
+      "type": "INHERITS"
+    },
+    {
+      "id": "support|INHERITS|export_helper",
+      "source": "support",
+      "target": "export_helper",
+      "type": "INHERITS"
+    },
+    {
+      "id": "finance|INHERITS|shared_ops",
+      "source": "finance",
+      "target": "shared_ops",
+      "type": "INHERITS"
+    },
+    {
+      "id": "support|GRANTS|view_orders",
+      "source": "support",
+      "target": "view_orders",
+      "type": "GRANTS"
+    },
+    {
+      "id": "support|GRANTS|generate_reports",
+      "source": "support",
+      "target": "generate_reports",
+      "type": "GRANTS"
+    },
+    {
+      "id": "shared_ops|GRANTS|export_customers",
+      "source": "shared_ops",
+      "target": "export_customers",
+      "type": "GRANTS"
+    },
+    {
+      "id": "export_helper|GRANTS|export_customers",
+      "source": "export_helper",
+      "target": "export_customers",
+      "type": "GRANTS"
+    },
+    {
+      "id": "view_orders|ACTS_ON|orders",
+      "source": "view_orders",
+      "target": "orders",
+      "type": "ACTS_ON"
+    },
+    {
+      "id": "generate_reports|ACTS_ON|reports",
+      "source": "generate_reports",
+      "target": "reports",
+      "type": "ACTS_ON"
+    },
+    {
+      "id": "export_customers|ACTS_ON|customer_records",
+      "source": "export_customers",
+      "target": "customer_records",
+      "type": "ACTS_ON"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "order_support",
+      "name": "Order support",
+      "requires": [
+        "view_orders",
+        "generate_reports"
+      ],
+      "performers": [
+        "maya",
+        "noah"
+      ]
+    },
+    {
+      "id": "finance_close",
+      "name": "Finance close",
+      "requires": [
+        "export_customers"
+      ],
+      "performers": [
+        "felix"
+      ]
+    },
+    {
+      "id": "dsar_fulfilment",
+      "name": "DSAR fulfilment",
+      "requires": [
+        "export_customers"
+      ],
+      "performers": [
+        "dsar_bot"
+      ]
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "no_support_bulk_export",
+      "description": "Support agents must not bulk-export customer records",
+      "forbids": [
+        "export_customers"
+      ],
+      "applies_to": [
+        "maya",
+        "noah"
+      ]
+    }
+  ],
+  "query_ms": 4.6
+}

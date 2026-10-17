@@ -1,0 +1,46 @@
+{
+  "must_deny": [
+    {
+      "principal": "maya",
+      "capability": "export_customers",
+      "source": "guardrail:no_support_bulk_export"
+    },
+    {
+      "principal": "noah",
+      "capability": "export_customers",
+      "source": "guardrail:no_support_bulk_export"
+    }
+  ],
+  "must_allow": [
+    {
+      "principal": "dsar_bot",
+      "capability": "export_customers",
+      "source": "workflow:dsar_fulfilment"
+    },
+    {
+      "principal": "felix",
+      "capability": "export_customers",
+      "source": "workflow:finance_close"
+    },
+    {
+      "principal": "maya",
+      "capability": "generate_reports",
+      "source": "workflow:order_support"
+    },
+    {
+      "principal": "maya",
+      "capability": "view_orders",
+      "source": "workflow:order_support"
+    },
+    {
+      "principal": "noah",
+      "capability": "generate_reports",
+      "source": "workflow:order_support"
+    },
+    {
+      "principal": "noah",
+      "capability": "view_orders",
+      "source": "workflow:order_support"
+    }
+  ]
+}

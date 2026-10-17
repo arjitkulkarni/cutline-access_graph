@@ -1,0 +1,384 @@
+{
+  "maya:view_orders": {
+    "principal": "maya",
+    "capability": "view_orders",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "maya",
+          "support",
+          "view_orders"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "maya|ASSIGNED_TO|support",
+          "support|GRANTS|view_orders"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 2.1,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "maya:generate_reports": {
+    "principal": "maya",
+    "capability": "generate_reports",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "maya",
+          "support",
+          "generate_reports"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "maya|ASSIGNED_TO|support",
+          "support|GRANTS|generate_reports"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 4.7,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "maya:export_customers": {
+    "principal": "maya",
+    "capability": "export_customers",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "maya",
+          "support",
+          "export_helper",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "maya|ASSIGNED_TO|support",
+          "support|INHERITS|export_helper",
+          "export_helper|GRANTS|export_customers"
+        ]
+      },
+      {
+        "nodes": [
+          "maya",
+          "support",
+          "shared_ops",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "maya|ASSIGNED_TO|support",
+          "support|INHERITS|shared_ops",
+          "shared_ops|GRANTS|export_customers"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 3.2,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "noah:view_orders": {
+    "principal": "noah",
+    "capability": "view_orders",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "noah",
+          "support",
+          "view_orders"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "noah|ASSIGNED_TO|support",
+          "support|GRANTS|view_orders"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 5.8,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "noah:generate_reports": {
+    "principal": "noah",
+    "capability": "generate_reports",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "noah",
+          "support",
+          "generate_reports"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "noah|ASSIGNED_TO|support",
+          "support|GRANTS|generate_reports"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 4.3,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "noah:export_customers": {
+    "principal": "noah",
+    "capability": "export_customers",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "noah",
+          "support",
+          "export_helper",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "noah|ASSIGNED_TO|support",
+          "support|INHERITS|export_helper",
+          "export_helper|GRANTS|export_customers"
+        ]
+      },
+      {
+        "nodes": [
+          "noah",
+          "support",
+          "shared_ops",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "noah|ASSIGNED_TO|support",
+          "support|INHERITS|shared_ops",
+          "shared_ops|GRANTS|export_customers"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 2.8,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "felix:view_orders": {
+    "principal": "felix",
+    "capability": "view_orders",
+    "allowed": false,
+    "paths": [],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 5.4,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "felix:generate_reports": {
+    "principal": "felix",
+    "capability": "generate_reports",
+    "allowed": false,
+    "paths": [],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 4,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "felix:export_customers": {
+    "principal": "felix",
+    "capability": "export_customers",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "felix",
+          "finance",
+          "shared_ops",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "felix|ASSIGNED_TO|finance",
+          "finance|INHERITS|shared_ops",
+          "shared_ops|GRANTS|export_customers"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 2.5,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "dsar_bot:view_orders": {
+    "principal": "dsar_bot",
+    "capability": "view_orders",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "dsar_bot",
+          "support",
+          "view_orders"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "dsar_bot|ASSIGNED_TO|support",
+          "support|GRANTS|view_orders"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 5.1,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "dsar_bot:generate_reports": {
+    "principal": "dsar_bot",
+    "capability": "generate_reports",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "dsar_bot",
+          "support",
+          "generate_reports"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "dsar_bot|ASSIGNED_TO|support",
+          "support|GRANTS|generate_reports"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 3.6,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  },
+  "dsar_bot:export_customers": {
+    "principal": "dsar_bot",
+    "capability": "export_customers",
+    "allowed": true,
+    "paths": [
+      {
+        "nodes": [
+          "dsar_bot",
+          "support",
+          "export_helper",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "dsar_bot|ASSIGNED_TO|support",
+          "support|INHERITS|export_helper",
+          "export_helper|GRANTS|export_customers"
+        ]
+      },
+      {
+        "nodes": [
+          "dsar_bot",
+          "support",
+          "shared_ops",
+          "export_customers"
+        ],
+        "edges": [
+          "ASSIGNED_TO",
+          "INHERITS",
+          "GRANTS"
+        ],
+        "edge_ids": [
+          "dsar_bot|ASSIGNED_TO|support",
+          "support|INHERITS|shared_ops",
+          "shared_ops|GRANTS|export_customers"
+        ]
+      }
+    ],
+    "cypher": "MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability}) RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types",
+    "query_ms": 2.1,
+    "revision": {
+      "revision": 3,
+      "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+      "updated_at": "2026-10-16T00:12:00.000Z"
+    }
+  }
+}

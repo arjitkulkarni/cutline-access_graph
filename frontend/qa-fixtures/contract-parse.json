@@ -1,0 +1,46 @@
+{
+  "contract": {
+    "must_deny": [
+      {
+        "principal": "maya",
+        "capability": "export_customers",
+        "source": "operator"
+      },
+      {
+        "principal": "noah",
+        "capability": "export_customers",
+        "source": "operator"
+      }
+    ],
+    "must_allow": [
+      {
+        "principal": "maya",
+        "capability": "generate_reports",
+        "source": "operator"
+      },
+      {
+        "principal": "maya",
+        "capability": "view_orders",
+        "source": "operator"
+      },
+      {
+        "principal": "noah",
+        "capability": "generate_reports",
+        "source": "operator"
+      },
+      {
+        "principal": "noah",
+        "capability": "view_orders",
+        "source": "operator"
+      }
+    ]
+  },
+  "notes": [
+    "Read 'support' as its human members; service identities (DSAR Bot) were not included.",
+    "Workflows declared in the graph are always preserved as well: Order support, Finance close, DSAR fulfilment."
+  ],
+  "unresolved": [
+    "before the quarterly audit"
+  ],
+  "parser": "rules"
+}

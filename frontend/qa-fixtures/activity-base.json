@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ev_a10f22",
+    "ts": "2026-10-16T00:02:00.000Z",
+    "kind": "seeded",
+    "summary": "Seeded the Customer Operations scenario",
+    "revision": 1,
+    "repair_id": null
+  },
+  {
+    "id": "ev_b42c90",
+    "ts": "2026-10-16T00:07:00.000Z",
+    "kind": "reset",
+    "summary": "Reset the Customer Operations scenario",
+    "revision": 2,
+    "repair_id": null
+  },
+  {
+    "id": "ev_c71e05",
+    "ts": "2026-10-16T00:12:00.000Z",
+    "kind": "reset",
+    "summary": "Reset the Customer Operations scenario",
+    "revision": 3,
+    "repair_id": null
+  }
+]

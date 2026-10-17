@@ -1,0 +1,96 @@
+{
+  "revision": {
+    "revision": 3,
+    "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+    "updated_at": "2026-10-16T00:12:00.000Z"
+  },
+  "findings": [
+    {
+      "principal": "maya",
+      "capability": "export_customers",
+      "guardrail": "no_support_bulk_export",
+      "paths": [
+        {
+          "nodes": [
+            "maya",
+            "support",
+            "export_helper",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "maya|ASSIGNED_TO|support",
+            "support|INHERITS|export_helper",
+            "export_helper|GRANTS|export_customers"
+          ]
+        },
+        {
+          "nodes": [
+            "maya",
+            "support",
+            "shared_ops",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "maya|ASSIGNED_TO|support",
+            "support|INHERITS|shared_ops",
+            "shared_ops|GRANTS|export_customers"
+          ]
+        }
+      ]
+    },
+    {
+      "principal": "noah",
+      "capability": "export_customers",
+      "guardrail": "no_support_bulk_export",
+      "paths": [
+        {
+          "nodes": [
+            "noah",
+            "support",
+            "export_helper",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "noah|ASSIGNED_TO|support",
+            "support|INHERITS|export_helper",
+            "export_helper|GRANTS|export_customers"
+          ]
+        },
+        {
+          "nodes": [
+            "noah",
+            "support",
+            "shared_ops",
+            "export_customers"
+          ],
+          "edges": [
+            "ASSIGNED_TO",
+            "INHERITS",
+            "GRANTS"
+          ],
+          "edge_ids": [
+            "noah|ASSIGNED_TO|support",
+            "support|INHERITS|shared_ops",
+            "shared_ops|GRANTS|export_customers"
+          ]
+        }
+      ]
+    }
+  ],
+  "risky_path_count": 4
+}

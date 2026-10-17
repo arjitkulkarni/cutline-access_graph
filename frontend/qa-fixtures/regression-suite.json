@@ -1,0 +1,202 @@
+{
+  "repair_id": "rp_7c41e2d9",
+  "revision": {
+    "revision": 3,
+    "hash": "sha256:4f1c9a2e7d03b5a8c6e1f9024b7d8a3e5c2f1b0a9d8e7c6b5a4f3e2d1c0b9a87",
+    "updated_at": "2026-10-16T00:12:00.000Z"
+  },
+  "cases": [
+    {
+      "name": "test_maya_cannot_export_customers",
+      "principal": "maya",
+      "capability": "export_customers",
+      "method": "POST",
+      "path": "/demo/customers/export",
+      "expected": "deny",
+      "expected_status": 403,
+      "source": "guardrail:no_support_bulk_export",
+      "last_result": {
+        "status_code": 403,
+        "decision": "deny",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_noah_cannot_export_customers",
+      "principal": "noah",
+      "capability": "export_customers",
+      "method": "POST",
+      "path": "/demo/customers/export",
+      "expected": "deny",
+      "expected_status": 403,
+      "source": "guardrail:no_support_bulk_export",
+      "last_result": {
+        "status_code": 403,
+        "decision": "deny",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_dsar_bot_can_export_customers",
+      "principal": "dsar_bot",
+      "capability": "export_customers",
+      "method": "POST",
+      "path": "/demo/customers/export",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:dsar_fulfilment",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_felix_can_export_customers",
+      "principal": "felix",
+      "capability": "export_customers",
+      "method": "POST",
+      "path": "/demo/customers/export",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:finance_close",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_maya_can_generate_reports",
+      "principal": "maya",
+      "capability": "generate_reports",
+      "method": "GET",
+      "path": "/demo/reports",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:order_support",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_maya_can_view_orders",
+      "principal": "maya",
+      "capability": "view_orders",
+      "method": "GET",
+      "path": "/demo/orders",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:order_support",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_noah_can_generate_reports",
+      "principal": "noah",
+      "capability": "generate_reports",
+      "method": "GET",
+      "path": "/demo/reports",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:order_support",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_noah_can_view_orders",
+      "principal": "noah",
+      "capability": "view_orders",
+      "method": "GET",
+      "path": "/demo/orders",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "workflow:order_support",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_dsar_bot_can_generate_reports",
+      "principal": "dsar_bot",
+      "capability": "generate_reports",
+      "method": "GET",
+      "path": "/demo/reports",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "unchanged access",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_dsar_bot_can_view_orders",
+      "principal": "dsar_bot",
+      "capability": "view_orders",
+      "method": "GET",
+      "path": "/demo/orders",
+      "expected": "allow",
+      "expected_status": 200,
+      "source": "unchanged access",
+      "last_result": {
+        "status_code": 200,
+        "decision": "allow",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_felix_cannot_generate_reports",
+      "principal": "felix",
+      "capability": "generate_reports",
+      "method": "GET",
+      "path": "/demo/reports",
+      "expected": "deny",
+      "expected_status": 403,
+      "source": "unchanged access",
+      "last_result": {
+        "status_code": 403,
+        "decision": "deny",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    },
+    {
+      "name": "test_felix_cannot_view_orders",
+      "principal": "felix",
+      "capability": "view_orders",
+      "method": "GET",
+      "path": "/demo/orders",
+      "expected": "deny",
+      "expected_status": 403,
+      "source": "unchanged access",
+      "last_result": {
+        "status_code": 403,
+        "decision": "deny",
+        "passed": true,
+        "target": "candidate:rp_7c41e2d9"
+      }
+    }
+  ]
+}
