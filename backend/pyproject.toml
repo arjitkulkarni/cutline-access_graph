@@ -1,0 +1,26 @@
+[project]
+name = "cutline-backend"
+version = "0.1.0"
+description = "CUTLINE — graph-native permission repair powered by FalkorDB"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.135",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.5",
+  "falkordb>=1.8.0",
+  "httpx>=0.27",
+  "mcp>=2.3.0",
+  "anthropic>=0.60",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+  "falkordb: runs against a real FalkorDB (requires FALKORDB_* credentials and CUTLINE_TEST_FALKORDB=1)",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
