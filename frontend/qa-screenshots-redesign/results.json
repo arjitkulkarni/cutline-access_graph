@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "Principal route includes its resource; traversal stops after selection",
+    "Derived path switch controls overlays",
+    "Keyboard graph search, selection, properties, and Escape",
+    "Global command search navigates pages",
+    "Collapsed navigation remains operable",
+    "Graph and inspector layout at 1920px",
+    "Graph and inspector layout at 1440px",
+    "Graph and inspector layout at 1280px",
+    "Graph and inspector layout at 1024px",
+    "Graph and inspector layout at 768px",
+    "Graph and inspector layout at 390px",
+    "All supporting screens fit 1440px",
+    "All supporting screens fit 390px",
+    "Revision additions/removals use observed snapshots and preserve viewport",
+    "Reduced motion disables traversal markers"
+  ],
+  "browserErrors": []
+}
