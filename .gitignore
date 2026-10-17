@@ -1,0 +1,19 @@
+# secrets
+.env
+*.env.local
+
+# python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node / next
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/
+
+# tools / OS
+*.exe
+.DS_Store
+Thumbs.db
