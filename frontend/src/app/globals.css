@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------------------------------
+   CUTLINE design tokens — black, bone, blood (shared with the landing page)
+   Surfaces are near-black and step up in lightness (bg → panel → raised); borders are 1px lines.
+   Blood red marks interaction (primary actions, focus, the active place) and danger (risk,
+   failure): the same red that means "the cut" on the landing page. Bone white is what survives
+   and what is selected; sage marks required/verified access; amber marks stale/attention.
+   ------------------------------------------------------------------------------------------ */
+@theme {
+  --color-bg: #070606;
+  --color-panel: #0e0d0d;
+  --color-raised: #161414;
+  --color-raised-2: #1f1c1c;
+  --color-inset: #0a0909;
+  --color-line: #272323;
+  --color-line-strong: #403939;
+  --color-line-soft: #1c1919;
+  --color-fg: #ece6dc;
+  --color-fg-2: #aba49b;
+  --color-fg-3: #8d867e;
+  --color-accent: #e3182f;
+  --color-accent-hover: #ff3048;
+  --color-accent-ink: #ffffff;
+  --color-amber: #d6a25c;
+  --color-sage: #7fa58b;
+  --color-red: #f03a4d;
+  --color-permitted: #9a938b;
+  --color-risk: #f03a4d;
+
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 22px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 26px;
+  --text-2xl--line-height: 32px;
+
+  /* Hard edges, as on the landing page. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.02) inset, 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-pop: 0 14px 36px -12px rgb(0 0 0 / 0.75), 0 2px 6px rgb(0 0 0 / 0.4);
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-fast: 120ms;
+  --duration-standard: 200ms;
+  --duration-moderate: 280ms;
+  --duration-trace: 800ms;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    color-scheme: dark;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(227 24 47 / 0.4);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3a3333 transparent;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-fg-3);
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.78);
+  }
+}
+
+@layer components {
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .label-micro {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-fg-3);
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .panel {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .hairline-b {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .cl-spin {
+    animation: cl-spin 0.9s linear infinite;
+  }
+
+  .page-enter {
+    animation: cl-enter var(--duration-standard) var(--ease-out-quart) both;
+  }
+
+  .cl-dialog[open] {
+    animation: cl-enter var(--duration-standard) var(--ease-out-quart) both;
+  }
+
+  .inspector-section {
+    padding: 18px;
+    border-bottom: 1px solid var(--color-line-soft);
+  }
+
+  .inspector-section:last-child { border-bottom: 0; }
+}
+
+@keyframes cl-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-sidebar[data-collapsed="true"] { width: 60px; }
+.app-sidebar[data-collapsed="true"] .sidebar-label { display: none; }
+.app-sidebar[data-collapsed="true"] .sidebar-brand,
+.app-sidebar[data-collapsed="true"] .sidebar-nav-item,
+.app-sidebar[data-collapsed="true"] .sidebar-collapse { justify-content: center; padding-inline: 0; }
+.app-sidebar[data-collapsed="true"] .workspace-search { justify-content: center; padding: 0; margin-inline: 10px; }
+@media (max-width: 1023px) {
+  .app-sidebar .sidebar-label { display: none; }
+  .app-sidebar .workspace-search { justify-content: center; padding: 0; margin-inline: 10px; }
+}
+
+@media (max-width: 639px) {
+  .graph-page { padding: 16px 12px; }
+  .graph-workspace { min-height: 650px; }
+  .graph-query-time { display: none; }
+  .graph-workspace-footer { align-items: flex-start; }
+  .evidence-document dl { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .evidence-document dd { min-width: 0; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .evidence-document li,
+  .evidence-document header > div > div,
+  .evidence-document section > div,
+  .evidence-document section > div > div > div { flex-wrap: wrap; }
+}
+
+@keyframes cl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cl-pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.cl-pulse {
+  animation: cl-pulse-soft 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
