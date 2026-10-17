@@ -1,0 +1,53 @@
+# CUTLINE — full local stack:  docker compose up --build
+#   console  http://localhost:3000
+#   API      http://localhost:8000/docs
+#   FalkorDB Browser http://localhost:3001  (graph: cutline_dev)
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6379:6379"
+      - "3001:3000"   # FalkorDB Browser
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  opa:
+    image: openpolicyagent/opa:1.21.2
+    command: ["run", "--server", "--addr", "0.0.0.0:8181", "--set", "decision_logs.console=true", "/policies/cutline_authz.rego"]
+    volumes:
+      - ./backend/policies:/policies:ro
+    ports:
+      - "8181:8181"
+
+  api:
+    build: ./backend
+    environment:
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: "6379"
+      FALKORDB_GRAPH: cutline_dev
+      DEMO_MODE: "true"
+      BACKEND_PORT: "8000"
+      AUTHZ_ENGINE: opa
+      OPA_URL: http://opa:8181
+      CORS_ORIGINS: http://localhost:3000
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      falkordb:
+        condition: service_healthy
+      opa:
+        condition: service_started
+
+  console:
+    build:
+      context: ./frontend
+      args:
+        CUTLINE_API_URL: http://api:8000   # compiled into the /api rewrite at build time
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api

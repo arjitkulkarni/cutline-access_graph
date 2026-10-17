@@ -1,0 +1,5 @@
+node_modules
+.next
+qa-screenshots
+qa-screenshots-live
+test-results
