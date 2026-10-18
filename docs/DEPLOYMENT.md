@@ -73,3 +73,58 @@ Contents: [Before you start](#0-before-you-start) · [A. FalkorDB Cloud](#part-a
    first write. Nothing is overwritten: an existing graph is used as is. Evidence from a local graph is *not* worth
    copying, because it references that graph's own candidate graphs and revisions. Starting fresh is the honest
    state for a new deployment.
+
+## Part B: Railway (backend)
+
+1. Sign in at railway.com → **New Project** → **Deploy from GitHub repo** → pick `cutline-access_graph`. Grant Railway
+   access to the repository if asked.
+2. Open the new service → **Settings**:
+
+   | Setting | Value |
+   |---|---|
+   | Source → **Root Directory** | `/backend` |
+   | Build → **Builder** | Dockerfile (detected automatically from `backend/Dockerfile`) |
+   | Build → **Watch Paths** | `/backend/**`. Patterns are matched from the repository root even with a root directory, so docs and frontend commits don't redeploy the API. |
+   | Deploy → **Region** | Southeast Asia (Singapore), or whichever is nearest your FalkorDB region |
+   | Deploy → **Healthcheck Path** | `/health` |
+   | Deploy → **Restart Policy** | On Failure |
+   | Deploy → **Serverless / App Sleeping** | Off (a sleeping API would make the console show "unreachable") |
+   | Deploy → Teardown → **Draining Seconds** | `25`. Uvicorn finishes in-flight requests for up to 20 s after SIGTERM (or set the variable `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=25`). |
+   | Custom start command | leave empty: the Dockerfile `CMD` is correct |
+
+   Railway no longer reads `railway.json` for new services (config-as-code is deprecated), so these settings live in
+   the dashboard. Nothing Railway-specific is committed.
+3. **Variables** (service → Variables → *Raw Editor* works). Use real values; never commit them:
+   ```env
+   ENVIRONMENT=production
+   FALKORDB_HOST=<host from Connectivity tab>
+   FALKORDB_PORT=<port>
+   FALKORDB_USERNAME=falkordb
+   FALKORDB_PASSWORD=<password>
+   FALKORDB_TLS=false
+   FALKORDB_GRAPH=cutline_prod
+   DEMO_MODE=true
+   AUTHZ_ENGINE=reference
+   CORS_ORIGINS=https://<your-project>.vercel.app
+   # optional, enables the Claude agent mode:
+   ANTHROPIC_API_KEY=<key>
+   ```
+   Leave **`PORT` and `BACKEND_PORT` unset.** Railway injects `PORT`, and the container binds it and exports
+   `BACKEND_PORT` to match. If they disagreed, runtime verification would call the wrong port and every check would fail.
+   You will know the Vercel URL only after Part C: set `CORS_ORIGINS` then (D.2). The console doesn't need it to work.
+4. **Deploy:** Railway builds `backend/Dockerfile` (Python 3.11, runtime dependencies only, non-root user) and starts
+   `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. A deployment goes live once `/health` returns 2xx. Railway
+   checks only at deploy time, not continuously.
+5. **Public HTTPS domain:** Settings → Networking → **Generate Domain**. If Railway asks for a port, use the one printed
+   in the deploy log (`Uvicorn running on http://0.0.0.0:<port>`). You get `https://<service>.up.railway.app`.
+6. **Test the API and read the logs:**
+   ```bash
+   API=https://<service>.up.railway.app
+   curl -s $API/health                     # {"status":"ok",...} liveness, touches no dependency
+   curl -s $API/ready                      # 200 + latency when FalkorDB answers, 503 otherwise
+   curl -s $API/api/health                 # falkordb.connected must be true; the host shows as [hidden]
+   curl -s -X POST $API/demo/customers/export -H "X-Cutline-Principal: maya" -o /dev/null -w "%{http_code}\n"  # 200 before a repair
+   ```
+   The deploy logs should show `CUTLINE 0.1.0 starting (environment=production, ...)` and then
+   `FalkorDB ready; active graph 'cutline_prod'`. On the Free tier you will also see `FALKORDB_TLS is off: ...`
+   (see [section 8](#8-security-posture-and-known-limits)). Interactive API docs are at `$API/docs`.
