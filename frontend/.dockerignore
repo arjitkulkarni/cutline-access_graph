@@ -3,3 +3,5 @@ node_modules
 qa-screenshots
 qa-screenshots-live
 test-results
+.env
+.env*.local
