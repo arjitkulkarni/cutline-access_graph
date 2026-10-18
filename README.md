@@ -35,3 +35,20 @@ Every obvious fix breaks something:
 | **Create `support_safe` (view_orders, generate_reports), move Maya and Noah onto it** | ✅ every guardrail holds, every workflow survives, no new access |
 
 A human reviewer has to hold all of these routes and dependencies in their head at once. CUTLINE makes the graph do it.
+
+## How CUTLINE works
+
+1. **Discover.** FalkorDB returns every bounded access path (`[:INHERITS*0..6]`) for each guardrail violation.
+2. **Contract.** Guardrails (`must_deny`) and workflows (`must_allow`) are nodes in the graph. An operator can add
+   constraints in natural language; they are parsed into a typed contract and confirmed before use.
+3. **Plan.** Bounded, deterministic candidate generation (single cuts, minimal hitting sets, scoped-role migration).
+   Each candidate is applied to its own `GRAPH.COPY` of the policy and re-checked by FalkorDB. A failure carries a
+   witness path or the broken workflow. The cheapest passing candidate under a transparent cost model wins.
+4. **Verify.** Real requests to the synthetic Customer Ops API, decided by an **independent enforcement point**
+   (a reference closure engine, or Open Policy Agent) that reads the candidate graph. The graph prediction and the
+   runtime decision must agree on every check.
+5. **Approve and apply.** A human approves. The edits land in **one atomic Cypher statement** guarded by a
+   compare-and-set on the policy revision. Post-apply verification re-runs against the live policy.
+6. **Stay honest.** Evidence is bound to a revision *and* a content hash. A live mutation (or an out-of-band edit in
+   FalkorDB Browser) makes it stale, apply is refused, and the agent plans again. Regression tests (JSON and pytest)
+   pin every decision.
