@@ -462,3 +462,31 @@ To look at the raw graph in FalkorDB Browser (graph `cutline_dev`), try:
 MATCH p = (:User {id: 'maya'})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(:Capability {id: 'export_customers'})
 RETURN p
 ```
+
+### Optional extras
+
+**Open Policy Agent as the enforcement point.** Install OPA 1.21, then from `backend/`:
+
+```bash
+opa run --server --addr 127.0.0.1:8181 policies/cutline_authz.rego
+```
+
+and set `AUTHZ_ENGINE=opa` and `OPA_URL=http://127.0.0.1:8181` in `backend/.env`, then restart the API.
+`/api/health` reports `"authz_engine":{"name":"opa","available":true}`.
+
+**Claude-driven agent.** Set `ANTHROPIC_API_KEY` in `backend/.env` and restart the API. Without a key the agent runs the
+same tools in a fixed order and labels the run `mode: "deterministic"`. The key stays on the backend; never put it in
+the frontend.
+
+**MCP server.** The agent's 11 tools are also an MCP server, reading the same `backend/.env`:
+
+```bash
+cd backend
+.venv/bin/python -m app.mcp_server                           # stdio   (Windows: .venv\Scripts\python)
+.venv/bin/python -m app.mcp_server --http --port 8765        # streamable HTTP at http://127.0.0.1:8765/mcp
+
+# connect Claude Code to the HTTP server
+claude mcp add --transport http cutline http://127.0.0.1:8765/mcp
+# or let Claude Code launch the stdio server (run this from the backend/ directory)
+claude mcp add cutline -- <absolute path>/backend/.venv/bin/python -m app.mcp_server
+```
