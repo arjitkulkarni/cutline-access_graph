@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     falkordb_socket_timeout: float = 15.0
 
     # Application
+    environment: Literal["development", "production"] = "development"
+    log_level: str = "INFO"
     demo_mode: bool = True
     backend_port: int = 8000
     demo_api_base_url: str | None = None
@@ -76,6 +78,10 @@ class Settings(BaseSettings):
     @property
     def demo_base_url(self) -> str:
         return self.demo_api_base_url or f"http://127.0.0.1:{self.backend_port}"
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
 
     @property
     def cors_origin_list(self) -> list[str]:
