@@ -296,3 +296,21 @@ Source: [backend/app/services/repair_planner.py](backend/app/services/repair_pla
   held only by DSAR Bot").
 * **Independent check.** The enforcement point computes reachability with its own fixpoint closure over one-hop
   relations (or OPA's `graph.reachable`), so the planner's traversal is never the only judge of its own output.
+
+## Why FalkorDB is essential
+
+FalkorDB is not a visualisation layer. It is the state space CUTLINE reasons over:
+
+| Work | Done by FalkorDB |
+|---|---|
+| Effective-access reachability and multi-path witnesses | Variable-length Cypher traversal |
+| Business intent (workflows, guardrails) and the derived contract | Graph nodes and relationships |
+| Candidate isolation | `GRAPH.COPY`: one throw-away graph per candidate |
+| Counterexamples (forbidden path still open, workflow lost, new privilege) | Re-queries on the candidate graph |
+| Atomic, revision-guarded application | A single parameterised Cypher statement |
+| Evidence ledger and cross-session agent memory | `cutline_dev__ledger` with `(:Repair)-[:BASED_ON]->(:Revision)` |
+| What the enforcement point reads at runtime | One-hop relations from the selected graph |
+
+Remove FalkorDB and nothing works. [backend/tests/test_falkordb_unavailable.py](backend/tests/test_falkordb_unavailable.py)
+points the app at a dead port and asserts that every analysis and repair endpoint returns `503 FALKORDB_UNAVAILABLE`
+and the protected app fails closed. There is no fallback store.
