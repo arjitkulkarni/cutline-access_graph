@@ -314,3 +314,49 @@ FalkorDB is not a visualisation layer. It is the state space CUTLINE reasons ove
 Remove FalkorDB and nothing works. [backend/tests/test_falkordb_unavailable.py](backend/tests/test_falkordb_unavailable.py)
 points the app at a dead port and asserts that every analysis and repair endpoint returns `503 FALKORDB_UNAVAILABLE`
 and the protected app fails closed. There is no fallback store.
+
+---
+
+## Local setup
+
+Two ways to run the complete project on your machine:
+
+* **Path A: Docker Compose.** One command starts FalkorDB, OPA, the API and the console.
+* **Path B: native.** Python and Node.js on the host, with FalkorDB from Docker or FalkorDB Cloud. Use this when Docker
+  is not available (FalkorDB Cloud's free tier works) or when you want to develop.
+
+### Prerequisites
+
+| Tool | Version | Needed for |
+|---|---|---|
+| Git | any | cloning |
+| Docker with Compose v2 | recent | Path A, or FalkorDB in Path B |
+| Python | 3.11+ (tested on 3.11) | Path B backend |
+| Node.js and npm | Node 20.9+ (tested on 24) | Path B console |
+| FalkorDB Cloud account | free tier | Path B without Docker |
+| Open Policy Agent | 1.21 | optional, Path B only |
+| Anthropic API key | — | optional, LLM mode of the agent |
+
+```bash
+git clone https://github.com/arjitkulkarni/cutline-access_graph.git cutline
+cd cutline
+```
+
+### Path A: Docker Compose (everything in one command)
+
+```bash
+docker compose up --build
+# optional, enables the Claude-driven agent:  ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Landing page | http://localhost:3000 |
+| Console | http://localhost:3000/overview |
+| API docs (Swagger) | http://localhost:8000/docs |
+| FalkorDB Browser (graph `cutline_dev`) | http://localhost:3001 |
+| OPA | http://localhost:8181 |
+
+The API seeds the Customer Operations scenario into FalkorDB on first start, and runtime verification uses OPA as the
+enforcement point. Stop with `Ctrl+C`; `docker compose down` removes the containers (FalkorDB data in the container is
+discarded, and CUTLINE re-seeds on the next start). Continue with the [demo walkthrough](#demo-walkthrough).
