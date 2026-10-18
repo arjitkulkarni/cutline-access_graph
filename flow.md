@@ -2,7 +2,7 @@
 
 > Living log of what has been built, in what order, and what remains.
 > Updated at every milestone so work can stop at any point (the user asked to stop at ~40% weekly usage)
-> and resume from here. Last update: 2026-10-16 (evening IST).
+> and resume from here. Last update: 2026-10-17 (night IST, deployment prep).
 
 Legend: ✅ done · 🔄 in progress · ⏳ not started · ⚠️ needs user action
 
@@ -96,6 +96,28 @@ detection 11/12 vs direct-grant 7/12, median plan 1.46 s.
   contribution note (marked `<!-- TODO -->` in README.md).
 - 🔄 `docs/CUTLINE_Winning_Blueprint.pdf` (analysis/rating/plan PDF — being authored by a background agent).
 
+## 11. Production deployment prep (✅ code · ⚠️ dashboards need the user) — 2026-10-17
+
+Target: console on **Vercel** (root `frontend/`), API on **Railway** (Docker, root `/backend`), graphs on **FalkorDB
+Cloud**. Guide: `docs/DEPLOYMENT.md` (dashboard settings, env tables, troubleshooting, security limits).
+
+- Backend: `ENVIRONMENT=production` (generic 500s, FalkorDB host shown as `[hidden]`, no default CORS origins);
+  `/health` liveness + `/ready` readiness; `Cache-Control: no-store` on every response; CORS from `CORS_ORIGINS` +
+  optional `CORS_ORIGIN_REGEX`; lifespan shutdown closes FalkorDB + verifier clients; app logging to stdout;
+  FalkorDB TLS hostname check + optional CA PEM, keepalive, 30 s idle health check; LLM agent: 100 s time budget
+  (Vercel's CDN waits 120 s), typed Claude API errors → readable narrative, one manual retry, 30 runs/h + 2 at once.
+- Dockerfile: Python 3.11 (the tested interpreter), runtime deps only (`requirements-dev.txt` adds pytest), non-root,
+  binds `$PORT` and exports `BACKEND_PORT` to match (runtime verification calls itself on that port), `exec` for
+  SIGTERM. `backend/.dockerignore`; optional `backend/policies/Dockerfile` for an OPA service.
+- Frontend: Vercel build fails without an `https://` `CUTLINE_API_URL`; disconnected screen gives deployment advice
+  (not the local start command) for a remote target; 504 → "took too long" message; `frontend/.env.example`.
+- No `railway.json`: Railway stopped reading config-as-code for new services (deprecated).
+- Verified: 83 backend tests pass (16 new in `tests/test_deployment.py`); real FalkorDB `-m falkordb` 3/3; smoke ALL
+  PASS; image simulation (clean 3.11 venv, only `app/`+`policies/`, Dockerfile CMD, `PORT=8123`, production) ran
+  the full plan → verify 12/12 → approve → apply → challenge → stale lifecycle on FalkorDB Cloud (scratch graph
+  `cutline_deploycheck`, deleted afterwards); `e2e-live.mjs` passed through `next start` against it; tsc, ESLint,
+  `next build` clean. Not run: an actual `docker build` (no Docker on this machine), Railway/Vercel deploys.
+
 ---
 
 ## Remaining (in order)
@@ -103,8 +125,9 @@ detection 11/12 vs direct-grant 7/12, median plan 1.46 s.
 1. ✅ Public repo: https://github.com/arjitkulkarni/cutline-access_graph (2026-10-17, 66 commits on `main`, pushed in
    9 batches). `backend/.env` is not committed; `deliverables/` (unrelated Digithon promo workspace) is excluded
    locally via `.git/info/exclude`. The benchmark report masks the FalkorDB Cloud hostname.
-2. ⚠️ Deploy (see `docs/DEPLOYMENT.md`): API container + console, FalkorDB Cloud; keep the Free instance warm with an
-   uptime ping on `/api/health` (it stops after 1 idle day and has no persistence; CUTLINE re-seeds automatically).
+2. ⚠️ Deploy (code ready, see §11 and `docs/DEPLOYMENT.md`): Railway API + Vercel console + FalkorDB Cloud; needs
+   the user's accounts. Keep the Free instance warm with an uptime ping on `/ready` (it stops after 1 idle day and
+   has no persistence; CUTLINE re-seeds automatically).
 3. ⚠️ Optional: set `ANTHROPIC_API_KEY` and run the agent once in LLM mode (show the Claude tool trace in the video).
 4. ⚠️ Record the 3-minute demo video (script in README → "Three-minute demo").
 5. ⚠️ Fill the AI-disclosure / team-contribution note in README; submit (form opens **Oct 17 01:03 IST**, closes
