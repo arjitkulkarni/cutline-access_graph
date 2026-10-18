@@ -69,6 +69,13 @@ honest unique repair.
 - Verified: `tsc` + ESLint + `next build` clean; Playwright at 1440 / 820 / 390 px: no horizontal overflow, no
   console/page errors; stage background measured rgb(5,5,5) = page; reduced motion = static repaired scene, curtain
   skipped, no hydration errors.
+- ✅ 2026-10-18 night, mobile pass: on phones (< 768 px) the 3D graph is laid out top to bottom (`portrait` option in
+  `GraphScene.ts`: people on the top row, capabilities at the bottom, edge labels hang inwards; `Story.tsx` rebuilds
+  the scene when a rotation crosses the breakpoint) in a 50svh stage; the graph leans with scroll velocity on touch.
+  Candidate and scenario tables stack into cards, the 12-request log fits 360 px without sideways scrolling, agent
+  terminal lines wrap, hover effects only on hover devices (red card edges cut in on scroll instead), press feedback
+  on buttons, full-width hero CTAs, solid mobile menu with staggered items, tighter section spacing. Verified with
+  Playwright at 360 / 390 / 1440: no overflow, no console errors; tsc, ESLint, `next build` clean.
 - Known, pre-existing (dev only): every console route logs Next 16's "Could not validate … instant navigation" because
   `BackendGate` renders a skeleton while it checks `/api/health`. Fix later with `export const instant = false` per
   page or by rendering the segment during the check.
