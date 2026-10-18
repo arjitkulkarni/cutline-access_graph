@@ -530,20 +530,6 @@ html:has(.lp) {
   100% { transform: translate(0, 0); }
 }
 
-.lp-hero-meta {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lp-bone-3);
-}
-.lp-hero-meta a:hover { color: var(--lp-bone); }
-.lp-hero-meta i { width: 18px; height: 1px; background: var(--lp-line-3); }
-
 .lp-ticker {
   display: grid;
   gap: 4px;
