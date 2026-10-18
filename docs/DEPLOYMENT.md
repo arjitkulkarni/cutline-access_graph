@@ -277,3 +277,27 @@ setting below. Templates: [`backend/.env.example`](../backend/.env.example) and
 
 Docker Compose (`docker compose up --build`) still runs the full local stack (FalkorDB + OPA + API + console)
 unchanged.
+
+## 8. Security posture and known limits
+
+What is in place: no secrets in the repository or the frontend; secrets only in Railway variables; generic error
+bodies in production (tracebacks go to the Railway log only); the FalkorDB hostname is hidden from public responses;
+TLS hostname verification when TLS is on; no wildcard CORS and no credentialed CORS; `Cache-Control: no-store` on every
+API response, so Vercel's CDN never caches policy state; non-root container; bounded FalkorDB retries; the LLM agent
+runs under a time budget and an hourly and concurrency cap; and, by design, the agent can never approve or apply a repair.
+
+Open risks to accept or fix knowingly:
+
+1. **No authentication (by design for the demo).** Anyone with the URL can reset the scenario, run the live challenge,
+   plan, approve and apply repairs (`DEMO_MODE=true`). `X-Cutline-Principal` is a demo principal selector, not identity.
+   The data is synthetic. Do not reuse this deployment for real policy data without adding authentication.
+2. **One shared graph.** Concurrent visitors share one policy graph, so one judge's reset or challenge marks another's
+   evidence stale. Revision guards keep this safe (stale writes are refused), but it can surprise people.
+3. **FalkorDB Free tier: no TLS.** The FalkorDB password and graph contents cross the internet unencrypted between
+   Railway and FalkorDB Cloud (the API logs a warning). Acceptable for synthetic demo data with a password used nowhere
+   else. For anything real, use a TLS-enabled tier.
+4. **FalkorDB Free tier: no persistence, stops when idle.** See D.8 and the troubleshooting row on disappearing graphs.
+5. **No general rate limiting.** Only LLM runs are capped. A flood of plan or verify requests could exhaust the API's
+   worker threads; runtime verification needs free threads for its self-calls, so checks would then fail closed (never
+   pass). Railway's edge offers no WAF. Watch the logs during judging.
+6. **Public Swagger UI** at `/docs` on the Railway domain. Useful for judges, and it exposes nothing beyond the API itself.
