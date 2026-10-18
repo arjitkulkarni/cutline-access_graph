@@ -24,6 +24,30 @@ plans again.
 | FalkorDB is the primary database (Rules 2–3) | [Why FalkorDB is essential](#why-falkordb-is-essential) |
 | AI tools disclosure (Rules 11–13) | [AI tools disclosure](#ai-tools-disclosure) |
 
+## Contents
+
+1. [The problem](#the-problem)
+2. [How CUTLINE works](#how-cutline-works)
+3. [Architecture](#architecture)
+4. [Track 01 fit](#track-01-fit)
+5. [Graph data model](#graph-data-model)
+6. [Cypher queries the product depends on](#cypher-queries-the-product-depends-on)
+7. [Graph algorithms: the repair planner](#graph-algorithms-the-repair-planner)
+8. [Why FalkorDB is essential](#why-falkordb-is-essential)
+9. [Local setup](#local-setup)
+10. [Demo walkthrough](#demo-walkthrough)
+11. [Agent and MCP server](#agent-and-mcp-server)
+12. [Verification model](#verification-model)
+13. [Tests and benchmarks](#tests-and-benchmarks)
+14. [API reference](#api-reference)
+15. [Project structure](#project-structure)
+16. [Production deployment](#production-deployment)
+17. [Security design](#security-design)
+18. [Supported semantics](#supported-semantics)
+19. [AI tools disclosure](#ai-tools-disclosure)
+
+---
+
 ## The problem
 
 ```
