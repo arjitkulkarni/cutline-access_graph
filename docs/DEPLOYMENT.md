@@ -137,3 +137,29 @@ Agent instead, add a second service from the same repository with **Root Directo
 domain and Watch Paths `/backend/policies/**`. Then on the API service set `AUTHZ_ENGINE=opa` and
 `OPA_URL=http://<opa-service-name>.railway.internal:8181` (private networking). `/api/health` reports
 `authz_engine.name = "opa"` once it answers. This is a second billed service; skip it if credit is tight.
+
+## Part C: Vercel (frontend)
+
+1. Sign in at vercel.com → **Add New… → Project** → **Import** the GitHub repository.
+2. **Root Directory:** `frontend`. **Framework Preset:** Next.js (detected). Keep the default build command
+   (`npm run build`) and output; the install uses `package-lock.json`.
+3. Settings → Build and Deployment → **Node.js Version:** `24.x` (what the project is built and tested with).
+4. **Environment Variables:**
+
+   | Name | Value | Environments |
+   |---|---|---|
+   | `CUTLINE_API_URL` | `https://<service>.up.railway.app` (origin only: no path, no trailing `/api`) | Production, and Preview if you use previews |
+
+   It is read **at build time** and compiled into the `/api` rewrite, so changing it requires a **redeploy**. It is
+   intentionally not `NEXT_PUBLIC_`: no browser code needs it. On Vercel the build **fails on purpose** when it is
+   missing, not `https://`, or has a path. That way a console can never silently ship pointing at localhost.
+5. **Deploy.** Every route (`/`, `/overview`, `/graph`, `/repair`, `/evidence`, `/tests`) is prerendered and served
+   from the CDN, and `/api/*` is a CDN rewrite, so the console runs no serverless functions. Refreshing or deep-linking
+   any route works. Unknown paths render the app's 404 page.
+6. **Verify:** open `https://<project>.vercel.app/` (landing page; renders even without the API) and `/overview`
+   (console). In DevTools → Network, requests go to `https://<project>.vercel.app/api/...` and never to Railway or
+   localhost. If the API can't be reached, the console shows "The CUTLINE API is not reachable" with deployment
+   guidance, not a crash.
+
+Preview deployments sit behind Vercel Authentication by default; the production domain is public. Share the
+production URL with judges.
