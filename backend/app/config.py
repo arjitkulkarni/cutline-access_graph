@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     falkordb_username: str | None = None
     falkordb_password: str | None = None
     falkordb_tls: bool = False
+    falkordb_tls_ca_cert: str | None = None  # PEM text of a private CA; public CAs need nothing
+    falkordb_tls_check_hostname: bool = True
     falkordb_graph: str = "cutline_dev"
     falkordb_connect_timeout: float = 5.0
     falkordb_socket_timeout: float = 15.0
@@ -56,7 +58,7 @@ class Settings(BaseSettings):
     llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     llm_max_turns: int = 8
 
-    @field_validator("falkordb_username", "falkordb_password", "opa_url", "anthropic_api_key",
+    @field_validator("falkordb_username", "falkordb_password", "falkordb_tls_ca_cert", "opa_url", "anthropic_api_key",
                      "demo_api_base_url", "cors_origins", "cors_origin_regex", mode="before")
     @classmethod
     def _blank_is_none(cls, value: object) -> object:

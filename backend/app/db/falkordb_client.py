@@ -37,12 +37,17 @@ class FalkorClient:
     # ------------------------------------------------------------------ connection
     def _connect(self) -> FalkorDB:
         s = self.settings
+        tls: dict[str, Any] = {}
+        if s.falkordb_tls:
+            # redis-py verifies the certificate chain by default but not the hostname
+            tls = {"ssl_check_hostname": s.falkordb_tls_check_hostname, "ssl_ca_data": s.falkordb_tls_ca_cert}
         return FalkorDB(
             host=s.falkordb_host,
             port=s.falkordb_port,
             username=s.falkordb_username,
             password=s.falkordb_password,
             ssl=s.falkordb_tls,
+            **tls,
             socket_connect_timeout=s.falkordb_connect_timeout,
             socket_timeout=s.falkordb_socket_timeout,
             retry=Retry(ExponentialBackoff(cap=0.5, base=0.1), 1),
