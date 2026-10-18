@@ -94,6 +94,15 @@ def test_cors_honours_configured_origins_and_regex():
 
 
 # ---------------------------------------------------------------------- no internals in production
+def test_production_hides_the_falkordb_host():
+    health = unreachable_client(environment="production").get("/api/health").json()
+    assert health["falkordb"]["host"] == "[hidden]:1"
+    assert "127.0.0.1" not in health["falkordb"]["error"]
+    assert "unreachable" in health["falkordb"]["error"]
+    r = unreachable_client(environment="production").get("/api/graph")
+    assert r.status_code == 503 and "127.0.0.1" not in r.text
+
+
 def test_development_keeps_the_host_for_debugging():
     health = unreachable_client().get("/api/health").json()
     assert health["falkordb"]["host"] == "127.0.0.1:1"

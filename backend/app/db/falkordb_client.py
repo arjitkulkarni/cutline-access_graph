@@ -69,22 +69,25 @@ class FalkorClient:
 
     def _unavailable(self, exc: Exception) -> FalkorUnavailable:
         s = self.settings
+        where = s.falkordb_public_address
         if isinstance(exc, AuthenticationError) or "NOAUTH" in str(exc) or "WRONGPASS" in str(exc):
             msg = (
-                f"FalkorDB at {s.falkordb_host}:{s.falkordb_port} rejected the connection "
+                f"FalkorDB at {where} rejected the connection "
                 "(authentication required or invalid). Set FALKORDB_USERNAME and FALKORDB_PASSWORD."
             )
         else:
-            msg = f"FalkorDB at {s.falkordb_host}:{s.falkordb_port} is unreachable: {exc.__class__.__name__}: {exc}"
+            # redis-py names the host in its own messages; keep it out of public responses in production
+            detail = str(exc).replace(s.falkordb_host, s.falkordb_public_host)
+            msg = f"FalkorDB at {where} is unreachable: {exc.__class__.__name__}: {detail}"
         self.last_error = msg
-        return FalkorUnavailable(msg, {"host": s.falkordb_host, "port": s.falkordb_port})
+        return FalkorUnavailable(msg, {"host": s.falkordb_public_host, "port": s.falkordb_port})
 
     def _no_module(self) -> FalkorUnavailable:
         s = self.settings
-        msg = (f"{s.falkordb_host}:{s.falkordb_port} is a Redis server without the FalkorDB module (GRAPH.* commands "
+        msg = (f"{s.falkordb_public_address} is a Redis server without the FalkorDB module (GRAPH.* commands "
                "are unknown). Point FALKORDB_HOST/FALKORDB_PORT at FalkorDB — Docker falkordb/falkordb or FalkorDB Cloud.")
         self.last_error = msg
-        return FalkorUnavailable(msg, {"host": s.falkordb_host, "port": s.falkordb_port})
+        return FalkorUnavailable(msg, {"host": s.falkordb_public_host, "port": s.falkordb_port})
 
     def _response_error(self, exc: ResponseError, graph: str | None) -> Exception:
         text = str(exc)
