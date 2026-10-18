@@ -172,3 +172,41 @@ plus nine variations) live in [backend/benchmarks/scenarios.py](backend/benchmar
 
 Every plan is pinned to the revision and content hash it was computed on. The agent's `recall_history` tool reads this
 graph, which is how it remembers earlier repairs across sessions.
+
+---
+
+## Cypher queries the product depends on
+
+Every statement lives in [backend/app/db/queries.py](backend/app/db/queries.py). Values are always parameters. The
+only text formatted into a query is the variable-length bound (Cypher cannot parameterise it; it is a validated
+integer from 1 to 10) and labels or relationship types taken from fixed allowlists.
+
+### Reads: multi-hop access analysis
+
+```cypher
+// 1. Every bounded access path from one principal to one capability (a direct grant is the zero-hop case).
+//    Powers "trace access", the guardrail witnesses, and counterexamples on candidate graphs.
+MATCH p = (u:User {id: $principal})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability {id: $capability})
+RETURN DISTINCT [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types
+
+// 2. The same for a batch of (principal, capability) pairs in one round trip (every must_deny / must_allow pair).
+UNWIND $pairs AS pair
+MATCH p = (u:User)-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability)
+WHERE u.id = pair.principal AND c.id = pair.capability
+RETURN DISTINCT u.id AS principal, c.id AS capability,
+       [n IN nodes(p) | n.id] AS node_ids, [r IN relationships(p) | type(r)] AS rel_types
+
+// 3. The effective access matrix. Diffing it before and after a candidate detects
+//    new privileges (FAIL_NEW_PRIVILEGE) and collateral loss.
+MATCH (u:User)-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(c:Capability)
+RETURN DISTINCT u.id AS principal, c.id AS capability
+
+// 4. One-hop relations: all the independent enforcement point is allowed to read.
+MATCH (a)-[r]->(b) WHERE type(r) IN ['ASSIGNED_TO', 'INHERITS', 'GRANTS']
+RETURN type(r) AS type, a.id AS source, b.id AS target
+
+// 5. Snapshot for the console graph view and the content hash used for drift detection.
+MATCH (n) RETURN labels(n) AS labels, properties(n) AS props
+MATCH (a)-[r]->(b) RETURN type(r) AS type, a.id AS source, b.id AS target
+MATCH (p:Policy {id: 'active'}) RETURN p.revision AS revision, p.updated_at AS updated_at
+```
