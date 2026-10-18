@@ -1,0 +1,14 @@
+# Applies to `vercel deploy` / `vercel build` uploads from a local folder (Git deployments use the committed tree).
+# Keep secrets, local environments and the unrelated media workspace out of the upload.
+.env
+.env.*
+!.env.example
+.venv/
+node_modules/
+__pycache__/
+.pytest_cache/
+.next/
+deliverables/
+frontend/qa-screenshots/
+frontend/qa-screenshots-live/
+frontend/test-results/
