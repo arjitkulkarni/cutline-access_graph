@@ -89,6 +89,11 @@ detection 11/12 vs direct-grant 7/12, median plan 1.46 s.
 
 - ✅ `README.md` (judge-oriented, includes exact Cypher and real-FalkorDB results), `docs/DEPLOYMENT.md`,
   `docker-compose.yml` (FalkorDB + OPA + API + console), `backend/Dockerfile`, `frontend/Dockerfile`, `.env.example`.
+- ✅ 2026-10-18: README rewritten against hackathon Rule 10 (submission table at the top, graph data model incl.
+  ledger/candidate graphs, every Cypher statement + FalkorDB commands, planner algorithm, complete local setup:
+  Docker Compose or native Windows/macOS/Linux with FalkorDB Docker or Cloud, verify-with-curl, config, troubleshooting).
+  Step 3 curls checked against the live API. ⚠️ Still to fill: demo-video link, live-deployment link, team
+  contribution note (marked `<!-- TODO -->` in README.md).
 - 🔄 `docs/CUTLINE_Winning_Blueprint.pdf` (analysis/rating/plan PDF — being authored by a background agent).
 
 ---
