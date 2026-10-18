@@ -563,3 +563,14 @@ verifier, not the LLM, decides safety.
 | `propose_repair`, `verify_repair` | write (isolated graphs only) | Plan on candidate graphs; runtime proof |
 | `get_evidence`, `export_regression_tests` | read | Revision-bound evidence, pytest suite |
 | `apply_repair` | destructive | Only after a human approved the repair in the console |
+
+## Verification model
+
+| | Planner | Enforcement point |
+|---|---|---|
+| Reads | The full policy graph, variable-length Cypher | One-hop relations from the selected graph |
+| Decides with | FalkorDB reachability | `reference` fixpoint closure **or** OPA (`policies/cutline_authz.rego`, `graph.reachable`) |
+| Used for | Proposing and predicting | Serving `/demo/orders`, `/demo/reports`, `/demo/customers/export` |
+
+A check passes only if the HTTP decision equals the contract's expectation **and** FalkorDB's prediction. Candidate
+verification sends `X-Cutline-Policy: candidate:<repair_id>`; post-apply verification targets `active`.
