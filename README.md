@@ -490,3 +490,40 @@ claude mcp add --transport http cutline http://127.0.0.1:8765/mcp
 # or let Claude Code launch the stdio server (run this from the backend/ directory)
 claude mcp add cutline -- <absolute path>/backend/.venv/bin/python -m app.mcp_server
 ```
+
+### Configuration
+
+All backend settings are environment variables, read from `backend/.env` (template and comments in
+[backend/.env.example](backend/.env.example)). The ones you are likely to touch:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FALKORDB_HOST`, `FALKORDB_PORT` | `localhost`, `6379` | Where FalkorDB is |
+| `FALKORDB_USERNAME`, `FALKORDB_PASSWORD` | empty | FalkorDB Cloud credentials (user `falkordb`) |
+| `FALKORDB_TLS` | `false` | `true` only for a TLS-enabled FalkorDB Cloud instance |
+| `FALKORDB_GRAPH` | `cutline_dev` | Active policy graph; ledger and candidate graph names derive from it |
+| `DEMO_MODE` | `true` | Auto-seeding, scenario reset and the live challenge |
+| `BACKEND_PORT` | `8000` | Port runtime verification calls; must match uvicorn's port |
+| `AUTHZ_ENGINE`, `OPA_URL` | `reference`, empty | Independent enforcement point |
+| `MAX_DEPTH`, `MAX_CANDIDATES`, `MAX_CUT_SIZE` | `6`, `24`, `3` | Planner budget, reported in every plan |
+| `ANTHROPIC_API_KEY`, `LLM_MODEL` | empty, `claude-opus-5-5` | Optional LLM agent |
+
+The console has one setting, `CUTLINE_API_URL` ([frontend/.env.example](frontend/.env.example)).
+
+### Reset
+
+Use **Reset scenario** in the console sidebar, or `curl -X POST http://127.0.0.1:8000/api/scenarios/customer-ops/reset`.
+It re-seeds the active graph, deletes leftover candidate graphs, and keeps revision numbers increasing so evidence from
+before the reset is visibly stale.
+
+### Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| Console shows "disconnected" / API returns `503 FALKORDB_UNAVAILABLE` | The API cannot reach FalkorDB. Check `FALKORDB_*` in `backend/.env` and run `python -m scripts.falkordb_smoke`. |
+| "Redis server without the FalkorDB module" | Port 6379 is a plain Redis. Run FalkorDB on another port and set `FALKORDB_PORT`. |
+| Console shows "API unreachable" | Start the API on port 8000, or set `CUTLINE_API_URL` and restart `npm run dev` (rebuild for `npm start`). |
+| Every runtime verification check fails or times out | `BACKEND_PORT` differs from the port uvicorn listens on. Make them equal. |
+| `UnicodeEncodeError` in a Windows console | `$env:PYTHONIOENCODING = "utf-8"` before running scripts. |
+| Graph disappeared on FalkorDB Cloud free tier | Free instances have no persistence and stop when idle. CUTLINE re-seeds automatically on the next request. |
+| Port 3000 is taken | `npm run dev -- -p 3002` (the API needs no change; the console proxies `/api`). |
