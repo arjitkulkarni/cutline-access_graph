@@ -52,3 +52,30 @@ A human reviewer has to hold all of these routes and dependencies in their head 
 6. **Stay honest.** Evidence is bound to a revision *and* a content hash. A live mutation (or an out-of-band edit in
    FalkorDB Browser) makes it stale, apply is refused, and the agent plans again. Regression tests (JSON and pytest)
    pin every decision.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  user([Operator]) --> console["Next.js console<br/>frontend/"]
+  claude(["Claude Code / any MCP client"]) --> mcp["MCP server<br/>app.mcp_server"]
+  console -- "/api proxy" --> api["FastAPI<br/>backend/app"]
+  mcp --> svc
+  api --> svc["Analyzer · Planner · Verifier · Agent"]
+  svc -- "Cypher" --> active[("FalkorDB<br/>cutline_dev<br/>active policy")]
+  svc -- "GRAPH.COPY + edits" --> cand[("FalkorDB<br/>cutline_dev__cand__*<br/>candidate copies")]
+  svc -- "evidence + memory" --> ledger[("FalkorDB<br/>cutline_dev__ledger")]
+  svc -- "real HTTP" --> demo["Synthetic Customer Ops API<br/>/demo/*"]
+  demo --> pdp["Enforcement point<br/>reference engine or OPA"]
+  pdp -- "one-hop relations only" --> active
+  pdp -- "one-hop relations only" --> cand
+```
+
+| Layer | Technology |
+|---|---|
+| Graph database | FalkorDB (FalkorDB Cloud engine 4.22, or the `falkordb/falkordb` Docker image), `falkordb` Python client 1.8 |
+| API | Python 3.11, FastAPI, Pydantic v2, uvicorn |
+| Agent | Claude API (Claude Opus 5.5) tool-use loop, optional; deterministic fallback without a key |
+| Tools protocol | MCP Python SDK v2 (stdio or streamable HTTP) |
+| Independent enforcement | built-in reference closure engine, or Open Policy Agent 1.21 with [backend/policies/cutline_authz.rego](backend/policies/cutline_authz.rego) |
+| Console | Next.js 16, React 19, TanStack Query, React Flow (graph view), three.js (landing page) |
