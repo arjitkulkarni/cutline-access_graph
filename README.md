@@ -162,3 +162,13 @@ unreachable, and each `(User)-[:PERFORMS]->(Workflow)-[:REQUIRES]->(Capability)`
 19 nodes (4 users, 4 roles, 3 capabilities, 3 resources, 3 workflows, 1 guardrail, 1 policy) and 25 relationships.
 All data is synthetic (Rule 6); no real people or customer records are loaded. The ten benchmark scenarios (this one
 plus nine variations) live in [backend/benchmarks/scenarios.py](backend/benchmarks/scenarios.py).
+
+### Ledger graph (evidence and agent memory)
+
+```
+(:Repair {id, doc, status, created_at, updated_at})-[:BASED_ON]->(:Revision {n, hash})
+(:Event  {id, ts, kind, summary, revision, repair_id})-[:AT]->(:Revision {n})
+```
+
+Every plan is pinned to the revision and content hash it was computed on. The agent's `recall_history` tool reads this
+graph, which is how it remembers earlier repairs across sessions.
