@@ -10,6 +10,20 @@ applied only after a human approves it (one revision-guarded, atomic Cypher writ
 regression tests. If the policy changes underneath it, the evidence goes **stale**: CUTLINE refuses to apply it and
 plans again.
 
+## Submission at a glance
+
+| Hackathon requirement (Rule 10) | Where to find it |
+|---|---|
+| **Track** | **Track 01: Agents That Act on Connected Data** ([how CUTLINE fits](#track-01-fit)) |
+| Public source-code repository | https://github.com/arjitkulkarni/cutline-access_graph |
+| README with setup instructions | [Local setup](#local-setup) (Docker Compose, or native on Windows / macOS / Linux) |
+| Graph data model | [Graph data model](#graph-data-model) |
+| Cypher queries and graph algorithms | [Cypher queries](#cypher-queries-the-product-depends-on) · [Repair algorithm](#graph-algorithms-the-repair-planner) · source: [backend/app/db/queries.py](backend/app/db/queries.py) |
+| Demo video | <!-- TODO: paste the YouTube / Drive link --> _Link to be added before submission._ |
+| Live deployment | <!-- TODO: paste the Vercel URL, or leave this line as is --> _Link to be added before submission._ If it is offline, [Local setup](#local-setup) runs the complete project. |
+| FalkorDB is the primary database (Rules 2–3) | [Why FalkorDB is essential](#why-falkordb-is-essential) |
+| AI tools disclosure (Rules 11–13) | [AI tools disclosure](#ai-tools-disclosure) |
+
 ## The problem
 
 ```
