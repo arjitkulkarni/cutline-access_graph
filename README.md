@@ -274,3 +274,25 @@ MATCH (r:Repair) RETURN r.doc AS doc ORDER BY r.created_at DESC LIMIT 50
 | `GRAPH.CONSTRAINT CREATE … UNIQUE` | Unique ids on `User`, `Role`, `Capability` |
 
 `backend/scripts/falkordb_smoke.py` runs every one of these query shapes against a scratch graph and prints PASS/FAIL.
+
+## Graph algorithms: the repair planner
+
+Source: [backend/app/services/repair_planner.py](backend/app/services/repair_planner.py).
+
+* **Witness paths.** Query 2 above returns every forbidden path for every `(principal, capability)` the guardrails ban.
+* **Candidate generation** (deterministic order, explicit budget `MAX_CANDIDATES=24`, `MAX_CUT_SIZE=3`,
+  `MAX_DEPTH=6`):
+  * `single_cut`: remove one role-level edge (`INHERITS`, `GRANTS`, `ASSIGNED_TO`) that lies on a forbidden path;
+  * `multi_cut`: **minimal hitting sets** of the forbidden paths, i.e. the smallest edge sets that cut *every* path;
+  * `scoped_role_migration`: create `<role>_safe` granting exactly what the affected subjects must keep, and reassign
+    them to it.
+* **Evaluation.** Each candidate is applied to its own `GRAPH.COPY` and FalkorDB re-runs queries 2 and 3 there:
+  every `must_deny` pair unreachable, every `must_allow` pair reachable, no new `(principal, capability)` pair.
+  Outcome: `PASS`, `FAIL_REQUIRED_WORKFLOW`, `FAIL_FORBIDDEN_PATH` or `FAIL_NEW_PRIVILEGE`, each with a witness.
+* **Cost.** Sum of edit weights (create role 2, others 1), plus 2 per edit that mutates a pre-existing role held by
+  principals outside the contract's subjects (blast radius), plus 3 per undeclared capability lost.
+* **Honesty.** If nothing passes within the budget, the plan is `INFEASIBLE_WITHIN_BUDGET`. CUTLINE removes access and
+  never invents new grants. Residual risk is reported (for example "Support still reaches export_customers and is now
+  held only by DSAR Bot").
+* **Independent check.** The enforcement point computes reachability with its own fixpoint closure over one-hop
+  relations (or OPA's `graph.reachable`), so the planner's traversal is never the only judge of its own output.
