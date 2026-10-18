@@ -93,6 +93,15 @@ class Settings(BaseSettings):
             return [] if self.is_production else list(DEV_ORIGINS)
         return [o.strip().rstrip("/") for o in self.cors_origins.split(",") if o.strip()]
 
+    @property
+    def falkordb_public_host(self) -> str:
+        """FalkorDB host as reported in API responses: the hostname stays private in production."""
+        return "[hidden]" if self.is_production else self.falkordb_host
+
+    @property
+    def falkordb_public_address(self) -> str:
+        return f"{self.falkordb_public_host}:{self.falkordb_port}"
+
 
 @lru_cache
 def get_settings() -> Settings:

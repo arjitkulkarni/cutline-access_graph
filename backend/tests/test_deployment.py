@@ -94,6 +94,11 @@ def test_cors_honours_configured_origins_and_regex():
 
 
 # ---------------------------------------------------------------------- no internals in production
+def test_development_keeps_the_host_for_debugging():
+    health = unreachable_client().get("/api/health").json()
+    assert health["falkordb"]["host"] == "127.0.0.1:1"
+
+
 @pytest.mark.parametrize("environment,leaks", [("production", False), ("development", True)])
 def test_unexpected_errors_hide_internals_in_production(environment, leaks):
     container, client = memory_app(environment=environment)

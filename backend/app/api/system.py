@@ -86,7 +86,7 @@ def health(c: Container = Depends(container)) -> Health:
     engine_ok, engine_detail = c.pdp.engine.available()
     return Health(
         status="ok" if connected and engine_ok else "degraded",
-        falkordb=FalkorStatus(connected=connected, host=f"{s.falkordb_host}:{s.falkordb_port}",
+        falkordb=FalkorStatus(connected=connected, host=s.falkordb_public_address,
                               graph=s.falkordb_graph, latency_ms=latency, error=error),
         demo_mode=s.demo_mode,
         authz_engine=EngineStatus(name=c.pdp.engine_name, available=engine_ok, detail=engine_detail),
