@@ -606,3 +606,42 @@ engine 4.22), full table in [docs/benchmarks.md](docs/benchmarks.md):
 **Verified on real FalkorDB.** The smoke script passes every query shape on FalkorDB Cloud; `pytest -m falkordb` runs
 the full lifecycle (plan → runtime verification over real HTTP → approval → atomic apply with exact write counts →
 live mutation → stale evidence → replan) against FalkorDB Cloud.
+
+## API reference
+
+`GET /api/health` · `GET /api/scenarios` · `POST /api/scenarios/customer-ops/reset` · `GET /api/graph` ·
+`GET /api/policy/revision` · `POST /api/access/paths` · `POST /api/access/check` · `GET /api/risks` ·
+`GET /api/contract` · `POST /api/contract/parse` · `POST /api/repairs/plan` · `GET /api/repairs` ·
+`GET /api/repairs/{id}` · `POST /api/repairs/{id}/verify|approve|apply` · `GET /api/evidence/{id}` ·
+`GET /api/regression-tests/{id}` · `GET /api/regression-tests/{id}/export?format=json|pytest` · `GET /api/activity` ·
+`POST /api/demo/mutate-policy` · `POST /api/agent/investigate`. Probes: `GET /health` (liveness) · `GET /ready` (503
+unless FalkorDB answers). Request and response shapes: [docs/API_CONTRACT.md](docs/API_CONTRACT.md); interactive
+docs at `/docs` on the API.
+
+## Project structure
+
+```
+cutline/
+├── backend/                      FastAPI API, agent, MCP server (Python 3.11)
+│   ├── app/
+│   │   ├── db/                   FalkorDB client, graph store, queries.py (all Cypher), scenario.py (seed data)
+│   │   ├── services/             access analyzer, repair planner, verifier, contract, ledger, regression export
+│   │   ├── agent/                tool definitions and the Claude tool-use loop
+│   │   ├── api/                  REST routes
+│   │   ├── demo_app/             synthetic Customer Ops API (the app repairs are verified against)
+│   │   ├── models/               Pydantic models
+│   │   ├── mcp_server.py         MCP server over the same tools
+│   │   └── main.py               app entry point
+│   ├── policies/                 OPA policy (cutline_authz.rego)
+│   ├── benchmarks/               10 benchmark scenarios and the runner
+│   ├── scripts/falkordb_smoke.py checks every Cypher shape against a FalkorDB endpoint
+│   ├── tests/                    pytest suite (unit, live-socket, real FalkorDB, OPA)
+│   └── Dockerfile
+├── frontend/                     Next.js console and landing page
+│   ├── src/app/                  routes: /, /overview, /graph, /repair, /evidence, /tests
+│   ├── src/components/           graph view, repair studio, evidence, landing page
+│   ├── scripts/e2e-live.mjs      end-to-end run against a live API
+│   └── Dockerfile
+├── docs/                         API contract, deployment guide, benchmark report, explainer PDF
+└── docker-compose.yml            FalkorDB + OPA + API + console
+```
