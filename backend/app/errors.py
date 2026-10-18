@@ -69,3 +69,8 @@ class DemoModeDisabled(CutlineError):
 class AuthzEngineUnavailable(CutlineError):
     status_code = 503
     code = "AUTHZ_ENGINE_UNAVAILABLE"
+
+
+class RateLimited(CutlineError):
+    status_code = 429
+    code = "RATE_LIMITED"
