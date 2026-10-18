@@ -574,3 +574,35 @@ verifier, not the LLM, decides safety.
 
 A check passes only if the HTTP decision equals the contract's expectation **and** FalkorDB's prediction. Candidate
 verification sends `X-Cutline-Policy: candidate:<repair_id>`; post-apply verification targets `active`.
+
+## Tests and benchmarks
+
+```bash
+cd backend
+.venv/bin/python -m pytest                                              # 83 pass, 5 skipped (need the env vars below)
+CUTLINE_TEST_FALKORDB=1 .venv/bin/python -m pytest -m falkordb -v      # full lifecycle against real FalkorDB
+CUTLINE_TEST_OPA_URL=http://127.0.0.1:8181 .venv/bin/python -m pytest tests/test_opa_engine.py
+.venv/bin/python -m benchmarks.run                                      # 10 scenarios on FalkorDB, writes docs/benchmarks.md
+```
+
+Console checks: `cd frontend && npm run typecheck && npm run lint && npm run build`. With the API on :8000 and the
+built console served on :3000 (`npm start`), `node scripts/e2e-live.mjs` drives the console through the whole demo
+against the live API with no request interception and fails on any API or browser error.
+
+**Benchmarks.** Ten synthetic scenarios with known correct outcomes: the demo scenario, a bundled role, a private
+nested chain, an inheritance cycle, an assignment-only fix, two forbidden capabilities, subjects with different
+keep-sets, an infeasible requirement, an already-safe policy, and an 8-hop chain beyond the planner's 6-hop bound.
+CUTLINE is compared with a greedy "revoke at the granting role" repair and a direct-grant-only checker; every chosen
+repair is re-checked by the independent engine on the repaired graph. Results on **FalkorDB Cloud** (ap-south-1,
+engine 4.22), full table in [docs/benchmarks.md](docs/benchmarks.md):
+
+| Metric | CUTLINE | Baseline |
+|---|---|---|
+| Correct outcome (repair / refuse / flag as expected) | **10/10** | — |
+| Safe repair rate on repairable scenarios | **7/7** | greedy revoke-at-source: 2/7 |
+| Forbidden access detected | 11/12 (the 12th is beyond the depth bound and is flagged by the independent engine) | direct-grant checker: 7/12 |
+| Median planning time (all candidates on isolated graphs) | 1.46 s | — |
+
+**Verified on real FalkorDB.** The smoke script passes every query shape on FalkorDB Cloud; `pytest -m falkordb` runs
+the full lifecycle (plan → runtime verification over real HTTP → approval → atomic apply with exact write counts →
+live mutation → stale evidence → replan) against FalkorDB Cloud.
