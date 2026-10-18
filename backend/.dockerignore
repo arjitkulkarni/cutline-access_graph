@@ -1,0 +1,7 @@
+# Never send secrets or local tooling into the build context
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
