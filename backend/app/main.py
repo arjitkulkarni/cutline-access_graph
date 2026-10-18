@@ -47,13 +47,17 @@ async def lifespan(app: FastAPI):
              s.environment, s.demo_mode, s.authz_engine, "on" if s.anthropic_api_key else "off")
     if s.is_production and not s.falkordb_tls and s.falkordb_host not in LOCAL_HOSTS:
         log.warning("FALKORDB_TLS is off: the FalkorDB password and graph data cross the network unencrypted")
-    try:
-        await run_in_threadpool(container.policy.ensure_ready)
-        log.info("FalkorDB ready; active graph '%s'", container.store.active)
-    except FalkorUnavailable as exc:
-        log.warning("Starting without FalkorDB: %s", exc.message)
-    except CutlineError as exc:
-        log.warning("Policy graph not ready: %s", exc.message)
+    if app.state.demo_only:
+        # only reads the policy graph; seeding stays with the API so two services never race to create it
+        log.info("Serving only the synthetic Customer Ops app (/demo/*)")
+    else:
+        try:
+            await run_in_threadpool(container.policy.ensure_ready)
+            log.info("FalkorDB ready; active graph '%s'", container.store.active)
+        except FalkorUnavailable as exc:
+            log.warning("Starting without FalkorDB: %s", exc.message)
+        except CutlineError as exc:
+            log.warning("Policy graph not ready: %s", exc.message)
     yield
     try:
         await run_in_threadpool(_shutdown, container)
@@ -62,15 +66,18 @@ async def lifespan(app: FastAPI):
         log.exception("error during shutdown")
 
 
-def create_app(container: Container | None = None) -> FastAPI:
+def create_app(container: Container | None = None, *, demo_only: bool = False) -> FastAPI:
+    """The CUTLINE API. With demo_only, just the synthetic Customer Ops app (/demo/*) that repairs are verified
+    against, for the separate `demo_app` Vercel service (see app/demo_main.py)."""
     app = FastAPI(
-        title="CUTLINE",
+        title="CUTLINE Customer Ops (synthetic)" if demo_only else "CUTLINE",
         version=__version__,
         description="Graph-native permission repair: trace every route to a forbidden capability in FalkorDB, "
                     "plan the smallest safe structural change, and prove what survives.",
         lifespan=lifespan,
     )
     app.state.container = container or build_container()
+    app.state.demo_only = demo_only
     settings = app.state.container.settings
 
     @app.middleware("http")
@@ -108,10 +115,11 @@ def create_app(container: Container | None = None) -> FastAPI:
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": message}})
 
     app.include_router(system.probes)
-    app.include_router(system.router)
-    app.include_router(graph.router)
-    app.include_router(repairs.router)
-    app.include_router(agent.router)
+    if not demo_only:
+        app.include_router(system.router)
+        app.include_router(graph.router)
+        app.include_router(repairs.router)
+        app.include_router(agent.router)
     app.include_router(customer_ops.router)
     return app
 

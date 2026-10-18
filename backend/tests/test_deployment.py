@@ -217,3 +217,33 @@ def test_deterministic_agent_is_not_rate_limited():
     _, client = memory_app(llm_runs_per_hour=1)
     for _ in range(2):
         assert client.post("/api/agent/investigate", json={}).json()["mode"] == "deterministic"
+
+
+# ---------------------------------------------------------------------- demo_app service (Vercel)
+def test_demo_only_app_serves_just_the_customer_ops_app_and_does_not_seed_at_startup():
+    settings = Settings(_env_file=None, falkordb_graph="cutline_test", demo_mode=True, authz_engine="reference")
+    store = MemoryGraphStore(settings)
+    build_container(settings, store=store).policy.ensure_ready()  # the API seeds; the demo service only reads
+    demo = build_container(settings, store=store)
+    seeds = []
+    demo.policy.ensure_ready = lambda: seeds.append(True)
+    with TestClient(create_app(demo, demo_only=True)) as client:  # runs the lifespan
+        assert seeds == []  # startup leaves seeding to the API
+        assert client.get("/health").status_code == 200
+        r = client.post("/demo/customers/export", headers={"X-Cutline-Principal": "maya"})
+        assert r.status_code == 200 and r.headers["x-cutline-decision"] == "allow"
+        assert client.get("/api/health").status_code == 404
+
+
+def test_runtime_verification_reaches_a_separate_demo_service():
+    settings = Settings(_env_file=None, falkordb_graph="cutline_test", demo_mode=True, authz_engine="reference")
+    store = MemoryGraphStore(settings)
+    api = build_container(settings, store=store, verifier=RuntimeVerifier(settings))
+    api.policy.ensure_ready()
+    demo_service = create_app(build_container(settings, store=store), demo_only=True)
+    api.verifier._client = TestClient(demo_service)  # stands in for the DEMO_API_BASE_URL binding
+    client = TestClient(create_app(api))
+    plan = client.post("/api/repairs/plan", json={}).json()
+    verified = client.post(f"/api/repairs/{plan['id']}/verify", json={}).json()
+    assert verified["status"] == "VERIFIED" and verified["verification"]["passed"]
+    assert len(verified["verification"]["checks"]) == 12
