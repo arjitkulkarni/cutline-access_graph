@@ -79,3 +79,13 @@ flowchart LR
 | Tools protocol | MCP Python SDK v2 (stdio or streamable HTTP) |
 | Independent enforcement | built-in reference closure engine, or Open Policy Agent 1.21 with [backend/policies/cutline_authz.rego](backend/policies/cutline_authz.rego) |
 | Console | Next.js 16, React 19, TanStack Query, React Flow (graph view), three.js (landing page) |
+
+## Track 01 fit
+
+| Track 01 focus | What CUTLINE does |
+|---|---|
+| Multi-hop reasoning | Variable-length traversals (`ASSIGNED_TO → INHERITS*0..6 → GRANTS`) find every route, not just direct grants |
+| Graph queries and algorithms as agent tools | 11 typed tools (trace, check, plan, verify, recall …) wrap the Cypher below; the model never writes Cypher |
+| Tool selection through MCP | The same tools are served by an MCP server; Claude chooses which to call |
+| Actions based on what the graph shows | Repairs are generated from the witness paths and applied as graph edits after approval |
+| Explainable results | Every rejected candidate carries a counterexample path or the workflow it breaks; every pass carries runtime evidence |
