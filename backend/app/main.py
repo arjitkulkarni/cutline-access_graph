@@ -77,9 +77,12 @@ def create_app(container: Container | None = None) -> FastAPI:
         response.headers.setdefault("Cache-Control", "no-store")
         return response
 
+    # The console calls the API through its own server-side /api proxy, so browsers only need CORS when a
+    # page on another origin calls the API directly. No cookies or auth headers are used: no credentials.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=app.state.container.settings.cors_origin_list,
+        allow_origins=settings.cors_origin_list,
+        allow_origin_regex=settings.cors_origin_regex,
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["X-Cutline-Decision", "X-Cutline-Engine", "X-Cutline-Decision-Id", "X-Cutline-Graph"],

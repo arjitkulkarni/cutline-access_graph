@@ -68,6 +68,31 @@ def test_lifespan_starts_without_falkordb_and_closes_connections_on_shutdown():
     assert len(resets) == before_shutdown + 1  # the FalkorDB pool was closed by the shutdown hook
 
 
+# ---------------------------------------------------------------------- CORS
+def _preflight(client: TestClient, origin: str):
+    return client.options("/api/health", headers={"Origin": origin, "Access-Control-Request-Method": "POST"})
+
+
+def test_cors_allows_localhost_only_in_development():
+    dev = unreachable_client()
+    assert _preflight(dev, "http://localhost:3000").headers.get("access-control-allow-origin") == "http://localhost:3000"
+    prod = unreachable_client(environment="production")
+    assert "access-control-allow-origin" not in _preflight(prod, "http://localhost:3000").headers
+
+
+def test_cors_honours_configured_origins_and_regex():
+    client = unreachable_client(environment="production", cors_origins="https://cutline.vercel.app/",
+                                cors_origin_regex=r"^https://cutline-[a-z0-9-]+\.vercel\.app$")
+    ok = _preflight(client, "https://cutline.vercel.app")
+    assert ok.status_code == 200 and ok.headers["access-control-allow-origin"] == "https://cutline.vercel.app"
+    assert _preflight(client, "https://cutline-git-feature-x.vercel.app").status_code == 200
+    assert "access-control-allow-origin" not in _preflight(client, "https://evil.example").headers
+    # simple requests: no wildcard, no credentials
+    r = client.get("/health", headers={"Origin": "https://cutline.vercel.app"})
+    assert r.headers["access-control-allow-origin"] == "https://cutline.vercel.app"
+    assert "access-control-allow-credentials" not in r.headers
+
+
 # ---------------------------------------------------------------------- no internals in production
 @pytest.mark.parametrize("environment,leaks", [("production", False), ("development", True)])
 def test_unexpected_errors_hide_internals_in_production(environment, leaks):
