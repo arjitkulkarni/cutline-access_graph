@@ -105,9 +105,15 @@ interface PolicyRevision {
   updated_at: string;         // ISO-8601
 }
 
+// ---------- probes (no /api prefix; for platforms and uptime monitors) ----------
+// GET /health -> 200 { status: "ok"; version: string }        liveness, touches no dependency
+// GET /ready  -> 200 { status: "ready"; falkordb: { connected: true; latency_ms: number } }
+//             |  503 { status: "unavailable"; falkordb: { connected: false; error: string } }
+
 // ---------- GET /api/health ----------
 interface Health {
   status: "ok" | "degraded";
+  // host is "[hidden]:<port>" when ENVIRONMENT=production
   falkordb: { connected: boolean; host: string; graph: string; latency_ms: number | null; error: string | null };
   demo_mode: boolean;
   authz_engine: { name: "reference" | "opa"; available: boolean; detail: string | null };
