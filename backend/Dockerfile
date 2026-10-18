@@ -16,5 +16,8 @@ RUN pip install -r requirements.txt
 COPY app ./app
 COPY policies ./policies
 
+RUN useradd --create-home --uid 10001 cutline
+USER cutline
+
 EXPOSE 8000
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${BACKEND_PORT:-8000}"]
