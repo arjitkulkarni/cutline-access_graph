@@ -50,6 +50,10 @@ class FalkorClient:
             **tls,
             socket_connect_timeout=s.falkordb_connect_timeout,
             socket_timeout=s.falkordb_socket_timeout,
+            socket_keepalive=True,
+            # re-check pooled connections idle for 30 s (cloud load balancers drop idle TCP sessions)
+            health_check_interval=30,
+            # at most one retry (bad credentials included), so a misconfiguration fails in seconds, never loops
             retry=Retry(ExponentialBackoff(cap=0.5, base=0.1), 1),
             client_name="cutline",
         )
