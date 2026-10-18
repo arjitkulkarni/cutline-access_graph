@@ -34,7 +34,7 @@ import type {
 export const API_BASE = "/api";
 
 /** Error codes produced by the client itself (never by the backend). */
-export type ClientErrorCode = "API_UNREACHABLE" | "NETWORK" | "BAD_RESPONSE";
+export type ClientErrorCode = "API_UNREACHABLE" | "GATEWAY_TIMEOUT" | "NETWORK" | "BAD_RESPONSE";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -105,6 +105,14 @@ async function toApiError(res: Response, path: string): Promise<ApiError> {
   }
   const err = extractError(payload, res.status);
   if (err) return new ApiError(res.status, err.code, err.message, err.details);
+  if (res.status === 504) {
+    // The proxy (Next.js or Vercel's CDN, 120 s) gave up waiting; the API itself may still be working.
+    return new ApiError(
+      504,
+      "GATEWAY_TIMEOUT",
+      "The CUTLINE API took too long to answer and the proxy stopped waiting. Refresh in a moment to see the result.",
+    );
+  }
   if (res.status >= 500) {
     // The Next.js proxy answers a plain-text 500 when the backend refuses the connection.
     return new ApiError(
