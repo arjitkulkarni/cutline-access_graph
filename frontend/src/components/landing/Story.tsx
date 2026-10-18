@@ -5,7 +5,7 @@ import { useReducedMotion } from "motion/react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/format";
 import type { GraphSceneHandle, RejectAttempt, StoryStep } from "./GraphScene";
-import { HACKATHON, MIGRATION } from "./data";
+import { MIGRATION } from "./data";
 import { Blade, Rise, Roll, Words } from "./primitives";
 
 const STAGE_NAMES = ["Breach", "Trace", "Reject", "Repair", "Verify"] as const;
@@ -86,19 +86,7 @@ export function Story() {
       <div className="lp-story-hero lp-story-col">
         <div data-step={0} className="lp-hero-block">
           <div className="lp-hero-copy">
-            <Rise delay={1.3}>
-              <p className="lp-hero-meta">
-                <a href={HACKATHON.url} target="_blank" rel="noreferrer">
-                  Graph Hacks
-                </a>
-                <i aria-hidden />
-                <span>FalkorDB × WeMakeDevs</span>
-                <i aria-hidden />
-                <span className="text-[var(--lp-red)]">Track 01</span>
-              </p>
-            </Rise>
-
-            <h1 className="lp-h1 mt-8">
+            <h1 className="lp-h1">
               <span className="sr-only">Cut the dangerous path. Keep the work alive.</span>
               <Slice n={1} text="Cut the dangerous path." />
               <Slice n={2} text="Keep the work alive." className="text-[var(--lp-bone-3)]" />
