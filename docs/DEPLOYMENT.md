@@ -199,3 +199,26 @@ production URL with judges.
 Exported regression tests default to `CUTLINE_BASE_URL=http://127.0.0.1:8000`. To run them against the deployment:
 `CUTLINE_BASE_URL=https://<service>.up.railway.app pytest <repair-id>_regression_test.py`. The MCP server (`app.mcp_server`) is
 a local stdio process for Claude Code and is not part of the deployment.
+
+## Part E: Troubleshooting
+
+| Symptom | Likely cause → fix |
+|---|---|
+| **CORS error** in the browser console | Something calls Railway directly instead of `/api`. The console never should; check `CUTLINE_API_URL` was set at build time. For a legitimate direct caller, add its exact origin (scheme + host, no trailing slash) to `CORS_ORIGINS` and redeploy Railway. In production, localhost is allowed only if listed. |
+| **Railway deploy fails the health check** | Read the deploy logs. `ModuleNotFoundError` means the build context is wrong: Root Directory must be `/backend`. A crash at import time usually means an invalid variable value (e.g. `ENVIRONMENT=prod`; allowed values are `development` and `production`). Don't set `PORT` yourself. `/health` doesn't depend on FalkorDB, so FalkorDB problems never fail a deploy; they show up on `/ready` and `/api/health`. |
+| **Vercel build fails: `CUTLINE_API_URL is not set` / `must be the API's https:// origin`** | Intended guard. Set it for the environment being built (Production and/or Preview), with `https://` and no path, then redeploy. |
+| **Vercel build fails elsewhere** | Root Directory must be `frontend`. Use Node.js 24.x. Reproduce locally: `cd frontend && npm ci && npm run typecheck && npm run lint && npm run build`. |
+| **Console shows "The CUTLINE API is not reachable"** | Wrong or stale `CUTLINE_API_URL` (the page prints the target it proxies to), the Railway service is down or redeploying, or there's no public domain yet. `curl $API/health` from your machine. After fixing the URL, **redeploy Vercel** (the value is build-time). |
+| **"FalkorDB is not connected"** / `/ready` 503 | The reported error says which: "rejected the connection" is an authentication failure (check `FALKORDB_USERNAME=falkordb` and the password, with no quotes or trailing spaces in Railway). "unreachable" is a network, host or port problem, or a **stopped Free instance**: resume it in FalkorDB Cloud. A wrong password fails within seconds (one retry at most), with no retry loop. |
+| **TLS or networking errors** (`SSL`, `CERTIFICATE_VERIFY_FAILED`, `wrong version number`) | `FALKORDB_TLS` doesn't match the instance: Free tier is `false`; TLS instances are `true`. `wrong version number` means TLS against a plain port. Hostname mismatch: confirm `FALKORDB_HOST` is the exact host from the Connectivity tab. For a private CA, set `FALKORDB_TLS_CA_CERT` to the PEM text. |
+| **Requests time out** / "took too long to answer" (HTTP 504) | Vercel waits 120 s for the first byte. Planning normally takes 1 to 3 s; slow plans mean high API↔FalkorDB latency: put Railway in the region nearest FalkorDB. Lower `MAX_CANDIDATES` or `CANDIDATE_WORKERS` if the Free instance struggles. The LLM agent stops itself at `LLM_TIME_BUDGET_S`. |
+| **Runtime verification fails with status 0 on every check** | The self-calls can't reach `127.0.0.1:$BACKEND_PORT`. You set `PORT` or `BACKEND_PORT`, or a custom start command bypasses the Dockerfile `CMD`. Remove both. Leave `DEMO_API_BASE_URL` empty. |
+| **AI agent: "The Claude API rejected ANTHROPIC_API_KEY (401)"**, 403, 404 or 429 | Bad or revoked key; no access to `LLM_MODEL`; wrong model id (`claude-opus-5-5`); or Anthropic rate limiting. Our own cap returns `RATE_LIMITED` (429) with a retry time; raise `LLM_RUNS_PER_HOUR` if needed. `llm.configured: false` in `/api/health` means the key isn't set on the Railway service. |
+| **Missing environment variables** | The API has local-development defaults (FalkorDB at `localhost:6379`), so a missing `FALKORDB_HOST` shows up as "FalkorDB at [hidden]:6379 is unreachable", not a crash. Compare against [section 6](#6-environment-variables). Railway logs print environment, demo mode, engine and LLM on/off at startup. |
+| **Graphs or evidence disappear** | FalkorDB Free has no persistence: an instance restart wipes all graphs. CUTLINE re-seeds the scenario at revision 1, but the ledger starts empty. Fix: keep the instance warm (D.8) or use a tier with persistence. Also check that no other deployment or laptop uses the same `FALKORDB_GRAPH` and resets it. |
+| **Docker build context issues** (`COPY failed: file not found`) | The build context must be `backend/`: Root Directory `/backend` on Railway, or `docker build backend` locally. `backend/.dockerignore` keeps `.env`, `.venv` and caches out of the context. |
+| **Old version still served after a push** | Railway Watch Paths `/backend/**` ignore other folders (intended). Vercel rebuilds on every push to the production branch. Confirm the deployment's commit in each dashboard. |
+
+Local reproduction of the production image without Docker: create a Python 3.11 venv with only `requirements.txt`, then run
+the Dockerfile `CMD` from a folder containing just `app/` and `policies/`, with `ENVIRONMENT=production` and `PORT=8123`.
+With Docker: `docker build -t cutline-api backend && docker run --rm -p 8000:8000 --env-file backend/.env cutline-api`.
