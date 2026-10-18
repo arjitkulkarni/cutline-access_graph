@@ -128,3 +128,12 @@ Contents: [Before you start](#0-before-you-start) · [A. FalkorDB Cloud](#part-a
    The deploy logs should show `CUTLINE 0.1.0 starting (environment=production, ...)` and then
    `FalkorDB ready; active graph 'cutline_prod'`. On the Free tier you will also see `FALKORDB_TLS is off: ...`
    (see [section 8](#8-security-posture-and-known-limits)). Interactive API docs are at `$API/docs`.
+
+### Optional: OPA as the enforcement engine
+
+The default `AUTHZ_ENGINE=reference` is a fully independent fixpoint engine and needs nothing else. To show Open Policy
+Agent instead, add a second service from the same repository with **Root Directory** `/backend/policies` (it builds
+`backend/policies/Dockerfile`: `openpolicyagent/opa:1.21.2` serving `cutline_authz.rego` on `:8181`), with no public
+domain and Watch Paths `/backend/policies/**`. Then on the API service set `AUTHZ_ENGINE=opa` and
+`OPA_URL=http://<opa-service-name>.railway.internal:8181` (private networking). `/api/health` reports
+`authz_engine.name = "opa"` once it answers. This is a second billed service; skip it if credit is tight.
