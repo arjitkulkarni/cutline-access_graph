@@ -163,3 +163,39 @@ domain and Watch Paths `/backend/policies/**`. Then on the API service set `AUTH
 
 Preview deployments sit behind Vercel Authentication by default; the production domain is public. Share the
 production URL with judges.
+
+## Part D: Connect everything
+
+1. **Railway URL into Vercel:** `CUTLINE_API_URL` (C.4), then **Redeploy** the latest production deployment.
+2. **Vercel origin into Railway:** set `CORS_ORIGINS=https://<project>.vercel.app` (comma-separate any custom domain).
+   For previews add `CORS_ORIGIN_REGEX=^https://<project>-[a-z0-9-]+-<team>\.vercel\.app$`. Railway stages variable
+   changes: click **Deploy** to apply them.
+3. **Redeploy when required:** Vercel after any `CUTLINE_API_URL` change; Railway applies variable changes when you
+   deploy them.
+4. **Validate CORS** (the console itself doesn't depend on CORS, because it proxies; this protects direct callers):
+   ```bash
+   curl -s -i -X OPTIONS $API/api/repairs/plan -H "Origin: https://<project>.vercel.app" \
+        -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" | grep -i access-control
+   # expect access-control-allow-origin: https://<project>.vercel.app ; an unlisted origin gets 400, no allow header
+   ```
+5. **Run the complete workflow** on the production console (this is the three-minute demo):
+   Overview shows the risky paths → Access Graph (`export_customers`) → Repair Studio → **Generate safe repair** →
+   run verification (12/12 runtime checks: real HTTP requests to the synthetic Customer Ops app) → approve → **Apply** →
+   Evidence → Regression Tests (download JSON and pytest) → **Live challenge** marks the evidence **stale** → the
+   Access Graph shows the new path.
+6. **Database persistence:** redeploy the Railway service (Deployments → ⋮ → Redeploy). The repair ledger and activity
+   are still there afterwards, because they live in FalkorDB. (On the Free tier only a FalkorDB *instance* restart clears
+   them; the scenario then re-seeds itself.)
+7. **AI operations** (if `ANTHROPIC_API_KEY` is set): `/api/health` shows `llm.configured: true`; run the agent from
+   Repair Studio and the trace shows `mode: llm` with Claude's tool calls. Each run stops within
+   `LLM_TIME_BUDGET_S` (100 s), under Vercel's 120 s limit for a first byte. Runs are capped at `LLM_RUNS_PER_HOUR`
+   (30), with at most 2 at once. Without a key, the agent runs the same tools deterministically and says so.
+8. **Keep it alive until judging ends:** point an uptime monitor (UptimeRobot free, every 5 to 10 min) at
+   `https://<service>.up.railway.app/ready`. It runs PING and GRAPH.LIST, so the Free FalkorDB instance never reaches
+   its 1-day idle stop, and you get alerted on 503.
+9. **Confirm localhost is not required:** shut your laptop's API and console down (or test from a phone on mobile
+   data) and repeat step 5.
+
+Exported regression tests default to `CUTLINE_BASE_URL=http://127.0.0.1:8000`. To run them against the deployment:
+`CUTLINE_BASE_URL=https://<service>.up.railway.app pytest <repair-id>_regression_test.py`. The MCP server (`app.mcp_server`) is
+a local stdio process for Claude Code and is not part of the deployment.
