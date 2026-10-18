@@ -1,49 +1,45 @@
-# Deploying CUTLINE for judging
+# Deploying CUTLINE
 
-The rules prefer a live deployment (or complete local setup instructions plus a working demo video). CUTLINE needs
-three things running: FalkorDB, the API (FastAPI, `backend/`), and the console (Next.js, `frontend/`).
+CUTLINE runs as three managed services: the **console** (Next.js, `frontend/`) on **Vercel**, the **API**
+(FastAPI, `backend/`) on **Railway**, and the policy graphs on **FalkorDB Cloud**. When it is set up as described
+here, nothing runs on a local machine: no localhost, WSL or Docker Compose.
 
-## 1. FalkorDB
-
-* **FalkorDB Cloud** — copy host, port and password from the instance's *Connectivity* tab. The default user is
-  `falkordb`. The Free tier has **no TLS** (`FALKORDB_TLS=false`), 100 MB RAM, **no persistence**, and is **stopped
-  after 1 day without use** (deleted after 7). CUTLINE re-seeds the demo scenario automatically when its graph is
-  missing, but a *stopped* instance takes the demo down — keep it in use (below) or self-host.
-* **Self-hosted** — run `falkordb/falkordb-server:latest` next to the API (e.g. a second service on the same host).
-
-Verify before deploying: `cd backend && .venv/Scripts/python -m scripts.falkordb_smoke`.
-
-## 2. API (any Docker host: Railway, Render, Fly.io, a VM)
-
-Build context `backend/` (it has a `Dockerfile`). Environment:
-
-| Variable | Value |
-|---|---|
-| `FALKORDB_HOST` / `FALKORDB_PORT` | from FalkorDB Cloud (or the private address of a self-hosted FalkorDB) |
-| `FALKORDB_USERNAME` / `FALKORDB_PASSWORD` | `falkordb` / your password (store as secrets) |
-| `FALKORDB_GRAPH` | `cutline_dev` |
-| `DEMO_MODE` | `true` (enables reset + live-mutation endpoints) |
-| `BACKEND_PORT` | the port the platform routes to (often `8000` or `$PORT`) |
-| `CORS_ORIGINS` | the console's public URL |
-| `AUTHZ_ENGINE` / `OPA_URL` | `reference`, or `opa` + the URL of an `openpolicyagent/opa:1.21.2` service running `backend/policies/cutline_authz.rego` |
-| `ANTHROPIC_API_KEY` | optional — enables the Claude Opus 5.5 agent mode |
-
-Runtime verification sends real HTTP requests to `DEMO_API_BASE_URL`, which defaults to the API itself
-(`http://127.0.0.1:$BACKEND_PORT`) — correct for a single container.
-
-## 3. Console (Vercel, Netlify, or the same Docker host)
-
-`frontend/` is a Next.js app. Set `CUTLINE_API_URL` to the API's public URL; the console proxies `/api/*` to it
-server-side, so the browser never needs CORS.
-
-## 4. Keep it alive until judging ends
-
-Point an uptime monitor (UptimeRobot, a GitHub Actions `schedule`, or cron) at `GET <api>/api/health` every few
-hours. The health check runs `PING` and `GRAPH.LIST` against FalkorDB, so the instance sees regular use.
-
-## 5. Smoke-test the deployment
-
-```bash
-curl -s <api>/api/health                     # falkordb.connected must be true
-curl -s -X POST <api>/demo/customers/export -H "X-Cutline-Principal: maya"     # 200 before the repair
+```text
+                       INTERNET (browser)
+                              |  HTTPS
+                              v
+   VERCEL ─ static pages from the CDN (every route is prerendered)
+            /api/*  ── rewrite at the CDN, server to server ──┐   (browser never calls Railway: no CORS needed)
+                                                              |  HTTPS
+                                                              v
+   RAILWAY ─ FastAPI in Docker (uvicorn, 1 process, non-root, binds $PORT)
+              │   runtime verification sends real HTTP requests to itself over 127.0.0.1:$PORT
+              ├────────── redis protocol (TLS when the instance has it) ──>  FALKORDB CLOUD
+              │                                                              policy graph, isolated candidate
+              │                                                              graphs, evidence ledger graph
+              └────────── HTTPS (optional, key stays on Railway) ───────────>  ANTHROPIC API (Claude Opus 5.5)
 ```
+
+* **All state lives in FalkorDB** (active policy graph, candidate graphs, the ledger of repairs and events). The API
+  is stateless and writes nothing to disk, so Railway redeploys and restarts lose nothing.
+* **The browser only talks to Vercel.** `frontend/next.config.ts` rewrites `/api/*` to `CUTLINE_API_URL`. That URL
+  is compiled in at build time, and no secret reaches the frontend.
+* **Secrets stay on Railway:** the FalkorDB password and `ANTHROPIC_API_KEY`.
+
+Contents: [Before you start](#0-before-you-start) · [A. FalkorDB Cloud](#part-a-falkordb-cloud) ·
+[B. Railway](#part-b-railway-backend) · [C. Vercel](#part-c-vercel-frontend) · [D. Connect](#part-d-connect-everything) ·
+[E. Troubleshooting](#part-e-troubleshooting) · [Environment variables](#6-environment-variables) ·
+[Local vs production](#7-local-development-vs-production) · [Security and limits](#8-security-posture-and-known-limits)
+
+---
+
+## 0. Before you start
+
+* Accounts: GitHub (the repository), FalkorDB Cloud, Railway (a trial or a plan with usage credit), Vercel (Hobby works).
+* Order matters: **FalkorDB, then Railway, then Vercel, then go back to Railway for the CORS origin.** Each step needs
+  a URL from the one before.
+* **Pick regions close together.** Planning runs many small graph queries, so latency between the API and FalkorDB
+  dominates. With the FalkorDB instance in `ap-south-1` (Mumbai), deploy the Railway service in
+  **Southeast Asia (Singapore)**; a US region adds roughly 200 ms to every round trip.
+* Deadline note: the hackathon closes on **2026-10-18 23:59 IST**. Keep the services and the uptime ping (D.8) running
+  until judging ends.
