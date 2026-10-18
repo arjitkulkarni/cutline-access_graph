@@ -546,3 +546,20 @@ The three-minute flow shown in the demo video, all in the console:
    turns **stale**, apply is refused, the new path is traced, and the agent plans again and cuts only the new edge.
 8. **Agent.** Repair Studio → *Agent run* → **Run investigation**: the trace lists each tool the agent called and what
    the graph returned.
+
+## Agent and MCP server
+
+`POST /api/agent/investigate` runs an agent over 11 typed tools ([backend/app/agent/tools.py](backend/app/agent/tools.py)).
+With `ANTHROPIC_API_KEY` set it is **Claude Opus 5.5** choosing tools in a manual tool-use loop (append-only history,
+prompt caching, server-side refusal fallback, 100 s time budget). Without a key the same tools run in a fixed order
+and the response says `mode: "deterministic"`. The model never writes Cypher and can never approve: the deterministic
+verifier, not the LLM, decides safety.
+
+| Tool | Kind | Purpose |
+|---|---|---|
+| `inspect_policy`, `find_risks`, `trace_access`, `check_access` | read | Multi-hop investigation |
+| `recall_history` | read | Memory across sessions from the FalkorDB ledger |
+| `get_contract` | read | The derived contract, or natural language → contract proposal |
+| `propose_repair`, `verify_repair` | write (isolated graphs only) | Plan on candidate graphs; runtime proof |
+| `get_evidence`, `export_regression_tests` | read | Revision-bound evidence, pytest suite |
+| `apply_repair` | destructive | Only after a human approved the repair in the console |
