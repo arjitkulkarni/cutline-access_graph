@@ -414,3 +414,51 @@ graph and deletes only that graph, so it is safe to run against a shared instanc
 
 > Runtime verification sends real HTTP requests to this same API at `http://127.0.0.1:$BACKEND_PORT`. If you start
 > uvicorn on a port other than 8000, set `BACKEND_PORT` in `backend/.env` to the same number.
+
+#### Step 3: check the API
+
+In a second terminal (on Windows PowerShell type `curl.exe`, not `curl`):
+
+```bash
+curl http://127.0.0.1:8000/api/health
+# {"status":"ok","falkordb":{"connected":true,"graph":"cutline_dev",...},"authz_engine":{"name":"reference",...},...}
+
+curl -X POST http://127.0.0.1:8000/demo/customers/export -H "X-Cutline-Principal: maya"
+# 200 {"synthetic":true,"records":1000,...}   <- the breach CUTLINE will repair
+
+curl -X POST http://127.0.0.1:8000/api/access/paths -H "Content-Type: application/json" \
+     -d '{"principal":"maya","capability":"export_customers"}'
+# on a fresh seed: both inherited routes (via shared_ops and export_helper), plus the Cypher that found them
+```
+
+#### Step 4: start the console
+
+```bash
+cd frontend
+npm ci
+npm run dev                 # development server on http://localhost:3000
+# or a production build:    npm run build && npm start
+```
+
+The console proxies every `/api/*` request to `CUTLINE_API_URL` (default `http://127.0.0.1:8000`), so the browser never
+calls the API directly and needs no CORS. If your API runs elsewhere, copy `frontend/.env.example` to
+`frontend/.env.local` and set `CUTLINE_API_URL` **before** `npm run dev` or `npm run build` (the proxy target is read at
+start-up / compiled into the build).
+
+#### Step 5: open it
+
+| Page | URL | What it shows |
+|---|---|---|
+| Landing | http://localhost:3000 | The story of the project (renders without the API) |
+| Overview | http://localhost:3000/overview | Guardrail violations, policy revision, FalkorDB status |
+| Access Graph | http://localhost:3000/graph | The policy graph; select a capability to highlight every route to it |
+| Repair Studio | http://localhost:3000/repair | Contract, candidates with counterexamples, verification, approval, agent run, live challenge |
+| Evidence | http://localhost:3000/evidence | Revision-bound evidence for every repair |
+| Regression Tests | http://localhost:3000/tests | The generated test suite, exportable as JSON or pytest |
+
+To look at the raw graph in FalkorDB Browser (graph `cutline_dev`), try:
+
+```cypher
+MATCH p = (:User {id: 'maya'})-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(:Capability {id: 'export_customers'})
+RETURN p
+```
