@@ -3,19 +3,30 @@ name = "cutline-backend"
 version = "0.1.0"
 description = "CUTLINE — graph-native permission repair powered by FalkorDB"
 requires-python = ">=3.11"
+# Same pins as requirements.txt (the tested versions): Vercel's Python builder may install from either file.
 dependencies = [
-  "fastapi>=0.135",
-  "uvicorn[standard]>=0.30",
-  "pydantic>=2.9",
-  "pydantic-settings>=2.5",
-  "falkordb>=1.8.0",
-  "httpx>=0.27",
-  "mcp>=2.3.0",
-  "anthropic>=0.60",
+  "fastapi==0.143.2",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.14.1",
+  "pydantic-settings==2.16.0",
+  "falkordb==1.8.0",
+  "redis==8.1.0",
+  "httpx==0.28.1",
+  "mcp==2.3.0",
+  "anthropic==1.14.0",
 ]
 
 [project.optional-dependencies]
 test = ["pytest>=8.3"]
+
+# An application, not a library: installing this project (Vercel's Python builder does
+# `pip install backend/`) must only pull in the dependencies above, not package app/ or policies/.
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
