@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -13,6 +14,7 @@ from starlette.concurrency import run_in_threadpool
 
 from . import __version__
 from .api import agent, graph, repairs, system
+from .config import Settings
 from .container import Container, build_container
 from .demo_app import customer_ops
 from .errors import CutlineError, FalkorUnavailable
@@ -20,9 +22,22 @@ from .errors import CutlineError, FalkorUnavailable
 log = logging.getLogger("cutline")
 
 
+def configure_logging(settings: Settings) -> None:
+    """Send the app's own loggers to stdout (uvicorn only configures its loggers)."""
+    if not log.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        log.addHandler(handler)
+    log.setLevel(settings.log_level.upper())
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     container: Container = app.state.container
+    s = container.settings
+    configure_logging(s)
+    log.info("CUTLINE %s starting (environment=%s, demo_mode=%s, authz_engine=%s, llm=%s)", __version__,
+             s.environment, s.demo_mode, s.authz_engine, "on" if s.anthropic_api_key else "off")
     try:
         await run_in_threadpool(container.policy.ensure_ready)
         log.info("FalkorDB ready; active graph '%s'", container.store.active)
