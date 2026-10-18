@@ -30,6 +30,11 @@ class RuntimeVerifier:
             self._client = httpx.Client(base_url=self.settings.demo_base_url, timeout=20.0)
         return self._client
 
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+
     def run(self, policy_target: str, cases: list[CheckCase], predicted: set[tuple[str, str]],
             engine: str) -> list[RuntimeCheck]:
         checks = []
