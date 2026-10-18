@@ -210,3 +210,42 @@ MATCH (n) RETURN labels(n) AS labels, properties(n) AS props
 MATCH (a)-[r]->(b) RETURN type(r) AS type, a.id AS source, b.id AS target
 MATCH (p:Policy {id: 'active'}) RETURN p.revision AS revision, p.updated_at AS updated_at
 ```
+
+### Writes: seeding
+
+```cypher
+UNWIND $rows AS row CREATE (n:User {id: row.id}) SET n.name = row.name, n.department = row.department, ...
+UNWIND $rows AS row MATCH (a:User), (b:Role) WHERE a.id = row.s AND b.id = row.t CREATE (a)-[:ASSIGNED_TO]->(b)
+CREATE INDEX FOR (n:User) ON (n.id)
+```
+
+### Writes: applying a repair in one atomic statement
+
+Every precondition is a `MATCH` placed before any write, including the revision compare-and-set. A moved revision or a
+missing edge yields zero rows and writes nothing. Otherwise the revision bump, role creation, `MERGE`s and `DELETE`s
+commit together, because a single FalkorDB query is atomic. This is the statement generated for the `support_safe`
+migration:
+
+```cypher
+// params: n0_id=generate_reports, n1_id=view_orders, n2_id=maya, n3_id=noah, n4_id=support, cr0_id=support_safe
+MATCH (pol:Policy {id: 'active'}) WHERE pol.revision = $expected_revision
+MATCH (n0:Capability {id: $n0_id})
+MATCH (n1:Capability {id: $n1_id})
+MATCH (n2:User {id: $n2_id})
+MATCH (n3:User {id: $n3_id})
+MATCH (n4:Role {id: $n4_id})
+MATCH (n2)-[x5:ASSIGNED_TO]->(n4)
+MATCH (n3)-[x6:ASSIGNED_TO]->(n4)
+SET pol.revision = pol.revision + 1, pol.updated_at = $ts, pol.last_change = $change
+MERGE (cr0:Role {id: $cr0_id}) ON CREATE SET cr0.name = $cr0_name, cr0.origin = 'cutline'
+MERGE (cr0)-[:GRANTS]->(n0)
+MERGE (cr0)-[:GRANTS]->(n1)
+MERGE (n2)-[:ASSIGNED_TO]->(cr0)
+MERGE (n3)-[:ASSIGNED_TO]->(cr0)
+DELETE x5
+DELETE x6
+RETURN pol.revision AS revision
+```
+
+The planner only emits allowlisted edit types: `CREATE_ROLE`, `ADD_GRANT`, `REMOVE_GRANT`, `ADD_INHERITS`,
+`REMOVE_INHERITS`, `ASSIGN_ROLE`, `UNASSIGN_ROLE`.
