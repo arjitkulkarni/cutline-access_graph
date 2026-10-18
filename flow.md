@@ -119,10 +119,13 @@ Cloud**. Guide: `docs/DEPLOYMENT.md` (dashboard settings, env tables, troublesho
   `next build` clean. Not run: an actual `docker build` (no Docker on this machine), Railway/Vercel deploys.
 - 2026-10-18 night: alternative single-project deploy with **Vercel services** (`vercel.json`): `backend` (FastAPI,
   Python 3.12, 120 s max duration) and `frontend` (Next.js, `CUTLINE_API_SAME_ORIGIN=1`); `/api`, `/demo`, `/health`,
-  `/ready`, `/docs`, `/openapi.json` route to the backend, everything else to the console. Runtime verification reaches
-  the backend's own `/demo/*` through a self-binding that injects `DEMO_API_BASE_URL`. Verified with `vercel dev -L`
-  on a scratch graph (deleted): all routes, plan, verify 12/12 over the binding; tests pass on 3.11 and 3.14.
-  ⚠️ Not yet deployed; `docs/DEPLOYMENT.md` and the README still describe Railway + Vercel.
+  `/ready`, `/docs`, `/openapi.json` route to the backend, everything else to the console. Vercel rejected the first
+  version ("circular service binding: backend → backend"), so the synthetic Customer Ops app now also runs as a third
+  service, `demo_app` (same `backend/` root, entrypoint `app.demo_main:app`, never seeds), which serves `/demo/*`; the
+  backend binds to it and gets `DEMO_API_BASE_URL`. Verified with `vercel dev -L` on a scratch graph (deleted): all
+  three services start, plan, verify 12/12 with every check answered by `demo_app`; 85 tests pass (3.11 and 3.14).
+  Set the Function Region to `bom1` (Mumbai, next to FalkorDB `ap-south-1`); the project defaulted to `iad1`.
+  ⚠️ `docs/DEPLOYMENT.md` and the README still describe Railway + Vercel.
 
 ---
 
