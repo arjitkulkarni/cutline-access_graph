@@ -249,3 +249,28 @@ RETURN pol.revision AS revision
 
 The planner only emits allowlisted edit types: `CREATE_ROLE`, `ADD_GRANT`, `REMOVE_GRANT`, `ADD_INHERITS`,
 `REMOVE_INHERITS`, `ASSIGN_ROLE`, `UNASSIGN_ROLE`.
+
+### Ledger
+
+```cypher
+MERGE (r:Repair {id: $id})
+SET r.doc = $doc, r.status = $status, r.created_at = $created_at, r.updated_at = $updated_at
+WITH r MERGE (v:Revision {n: $base_revision}) ON CREATE SET v.hash = $base_hash
+WITH r, v MERGE (r)-[:BASED_ON]->(v)
+
+CREATE (e:Event {id: $id, ts: $ts, kind: $kind, summary: $summary, revision: $revision, repair_id: $repair_id})
+WITH e MERGE (v:Revision {n: $revision}) WITH e, v MERGE (e)-[:AT]->(v)
+
+MATCH (r:Repair) RETURN r.doc AS doc ORDER BY r.created_at DESC LIMIT 50
+```
+
+### FalkorDB graph commands
+
+| Command | Used for |
+|---|---|
+| `GRAPH.COPY <active> <candidate>` | One isolated, throw-away graph per repair candidate (falls back to snapshot replay if the server refuses to fork) |
+| `GRAPH.QUERY` / `GRAPH.RO_QUERY` | Writes / read-only analysis |
+| `GRAPH.LIST`, `GRAPH.DELETE` | Finding and cleaning up candidate graphs; scenario reset |
+| `GRAPH.CONSTRAINT CREATE … UNIQUE` | Unique ids on `User`, `Role`, `Capability` |
+
+`backend/scripts/falkordb_smoke.py` runs every one of these query shapes against a scratch graph and prints PASS/FAIL.
