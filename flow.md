@@ -129,7 +129,28 @@ Cloud**. Guide: `docs/DEPLOYMENT.md` (dashboard settings, env tables, troublesho
    the user's accounts. Keep the Free instance warm with an uptime ping on `/ready` (it stops after 1 idle day and
    has no persistence; CUTLINE re-seeds automatically).
 3. ⚠️ Optional: set `ANTHROPIC_API_KEY` and run the agent once in LLM mode (show the Claude tool trace in the video).
-4. ⚠️ Record the 3-minute demo video (script in README → "Three-minute demo").
+4. ✅ Demo video (2026-10-17): `deliverables/cutline_demo/hackathon_4k/CUTLINE_Hackathon_4K.mp4` — 4:20, 3840×2160
+   30 fps, 17 chapters, narration + burned-in captions, `.srt` and `Script_and_Chapters.md` alongside. Pipeline:
+   `narrate.py` (edge-tts) → `capture.cjs` (Playwright, isolated graph `cutline_recording_4k_20261017`) → `render.py`
+   (ffmpeg/nvenc). render.py re-renders a clip only when its command/overlay/inputs change (`*-final.key`).
+   Synthetic demo graph; agent shown in deterministic mode. Still ⚠️: upload (YouTube/Drive) and link it in the form.
+   🔄 Superseding it (user request, 2026-10-17 night): an animation-led 4K film in `deliverables/cutline_demo/motion/`.
+   - `capture/vclock.cjs`: deterministic 4K page capture (virtual clock for performance.now/timers/rAF, CDP-frozen
+     animation timeline + per-frame WAAPI seek, scripted cursor, 3840×2160 PNG → NVENC). `capture/landing.cjs` films the
+     landing (3D story, isolation, proof, protocol, FalkorDB unplug, agent terminal, results, closing wordmark);
+     `capture/app.cjs` films the real console against an isolated API on :8100 (graph `cutline_film_20261017`,
+     production console on :3100). Clips + marks/boxes in `public/footage/`.
+   - Remotion edit (`src/`): incision transitions, camera moves/callouts on footage, word-timed captions, ledger
+     overlay, pytest panel, end card; synthesized sound bed + SFX (`audio.py`); `finish.py` masters to -14 LUFS with
+     chapters + SRT. Narration = the hackathon_4k voice track. Target ≈ 4:20.
+   - Gotchas: each failed capture run leaves plans in the recording graph's ledger (sidebar shows "Stale" and later
+     revisions) → always capture on a fresh graph; CDP screenshots need the device-metrics override on their own
+     session; never give OffthreadVideo a negative start; Remotion's frame extraction needs
+     `--offthreadvideo-video-threads=16` (default 2 starves it); render detached (`render.cmd`) so a session restart
+     does not kill it.
+   - 2026-10-18: all footage captured (fresh graph, one clean run: r2 → r3 applied, r4 stale, agent 1-edit repair
+     verified), every scene QA'd from stills; full 4K render running (`render.cmd` → `out/film_raw.mp4`, ~45 min),
+     then `finish.py` → `out/CUTLINE_Graph_Hacks_4K.mp4`. Local servers (3000/3100/8000/8100) are stopped.
 5. ⚠️ Fill the AI-disclosure / team-contribution note in README; submit (form opens **Oct 17 01:03 IST**, closes
    **Oct 18 23:59 IST**; editable until the deadline; name Track 01).
 6. Optional: blog post (AirPods side prize), star the FalkorDB repo (keyboard giveaway).
