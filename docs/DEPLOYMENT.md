@@ -222,3 +222,43 @@ a local stdio process for Claude Code and is not part of the deployment.
 Local reproduction of the production image without Docker: create a Python 3.11 venv with only `requirements.txt`, then run
 the Dockerfile `CMD` from a folder containing just `app/` and `policies/`, with `ENVIRONMENT=production` and `PORT=8123`.
 With Docker: `docker build -t cutline-api backend && docker run --rm -p 8000:8000 --env-file backend/.env cutline-api`.
+
+## 6. Environment variables
+
+Nothing is configured inside FalkorDB Cloud itself: it is the *source* of the host, port, user, password and TLS
+setting below. Templates: [`backend/.env.example`](../backend/.env.example) and
+[`frontend/.env.example`](../frontend/.env.example).
+
+**Vercel (console)**
+
+| Name | Purpose | Required | Example | Confidential |
+|---|---|---|---|---|
+| `CUTLINE_API_URL` | Target of the server-side `/api/*` rewrite (build time) | Required on Vercel; local default `http://127.0.0.1:8000` | `https://cutline-api.up.railway.app` | No (public URL), but server-side only, not `NEXT_PUBLIC_` |
+
+**Railway (API)**
+
+| Name | Purpose | Required | Example | Confidential |
+|---|---|---|---|---|
+| `ENVIRONMENT` | `production` hides internals in errors and the FalkorDB host in responses; no default CORS origins | Required (`production`) | `production` | No |
+| `FALKORDB_HOST` | FalkorDB endpoint (from FalkorDB Cloud) | Required | `r-xxxx….cloud` | Keep private |
+| `FALKORDB_PORT` | FalkorDB port (from FalkorDB Cloud) | Required | `56731` | No |
+| `FALKORDB_USERNAME` | FalkorDB user (from FalkorDB Cloud) | Required for Cloud | `falkordb` | Keep private |
+| `FALKORDB_PASSWORD` | FalkorDB password (from FalkorDB Cloud) | Required for Cloud | — | **Secret** |
+| `FALKORDB_TLS` | Use TLS (only if the instance has it) | Required if TLS | `false` (Free) | No |
+| `FALKORDB_TLS_CHECK_HOSTNAME` | Verify the certificate hostname (TLS only) | Optional, default `true` | `true` | No |
+| `FALKORDB_TLS_CA_CERT` | PEM of a private CA (TLS only) | Optional | `-----BEGIN CERTIFICATE-----…` | No |
+| `FALKORDB_GRAPH` | Active policy graph; `<graph>__ledger` and candidate graphs derive from it | Recommended | `cutline_prod` | No |
+| `FALKORDB_CONNECT_TIMEOUT` / `FALKORDB_SOCKET_TIMEOUT` | Seconds | Optional, `5` / `15` | `5` | No |
+| `CORS_ORIGINS` | Comma-separated exact browser origins allowed to call the API directly | Recommended | `https://cutline.vercel.app` | No |
+| `CORS_ORIGIN_REGEX` | Extra origins by pattern (Vercel previews) | Optional | `^https://cutline-[a-z0-9-]+-team\.vercel\.app$` | No |
+| `DEMO_MODE` | Enables scenario reset and live-challenge mutations | Optional, default `true` (keep for the demo) | `true` | No |
+| `AUTHZ_ENGINE` / `OPA_URL` | Enforcement engine for runtime verification | Optional, default `reference` | `opa` + `http://opa.railway.internal:8181` | No |
+| `ANTHROPIC_API_KEY` | Enables the Claude agent mode | Optional | — | **Secret** |
+| `LLM_MODEL` / `LLM_EFFORT` / `LLM_MAX_TURNS` | Agent model settings | Optional | `claude-opus-5-5` / `medium` / `8` | No |
+| `LLM_TIME_BUDGET_S` | Max seconds per agent run (keep < 120 behind Vercel) | Optional, `100` | `100` | No |
+| `LLM_RUNS_PER_HOUR` | Cap on LLM runs per rolling hour (`0` = none); 2 at once max | Optional, `30` | `30` | No |
+| `LOG_LEVEL` | App log level | Optional, `INFO` | `INFO` | No |
+| `MAX_DEPTH` / `MAX_CANDIDATES` / `MAX_CUT_SIZE` / `CANDIDATE_WORKERS` | Planner budget | Optional, `6` / `24` / `3` / `4` | — | No |
+| `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` | Railway's SIGTERM→SIGKILL window (platform setting) | Recommended | `25` | No |
+| `PORT`, `BACKEND_PORT` | Injected by Railway / derived by the container | **Do not set** | — | — |
+| `DEMO_API_BASE_URL` | Where runtime verification sends its requests | **Leave empty** (the API itself) | — | — |
