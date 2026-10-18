@@ -14,6 +14,15 @@ import { PageContainer } from "./PageHeader";
 
 const START_COMMAND = "cd backend && .venv\\Scripts\\python -m uvicorn app.main:app --port 8000";
 
+/** A deployed console proxies to a remote API: local start commands would be wrong advice there. */
+function isLocalTarget(apiTarget: string): boolean {
+  try {
+    return ["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(new URL(apiTarget).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function CommandBlock({ command }: { command: string }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-line bg-inset py-1.5 pl-3 pr-1.5">
@@ -40,6 +49,7 @@ export function DisconnectedState({
   const lastChecked = healthState?.errorUpdatedAt || healthState?.dataUpdatedAt || now;
 
   const apiDown = connection.phase === "unreachable";
+  const local = isLocalTarget(apiTarget);
   const Icon: LucideIcon = apiDown ? ServerOff : Database;
 
   return (
@@ -81,25 +91,47 @@ export function DisconnectedState({
               </div>
             ) : null}
 
-            <div>
-              <p className="label-micro">{apiDown ? "Start the API" : "Then restart the API"}</p>
-              {!apiDown ? (
-                <p className="mt-1.5 text-sm text-fg-2">
-                  Check <span className="mono text-fg">FALKORDB_HOST</span>, <span className="mono text-fg">FALKORDB_USERNAME</span>{" "}
-                  and <span className="mono text-fg">FALKORDB_PASSWORD</span> in <span className="mono text-fg">backend/.env</span>.
-                </p>
-              ) : (
-                <p className="mt-1.5 text-sm text-fg-2">From the repository root:</p>
-              )}
-              <div className="mt-2">
-                <CommandBlock command={START_COMMAND} />
+            {local ? (
+              <div>
+                <p className="label-micro">{apiDown ? "Start the API" : "Then restart the API"}</p>
+                {!apiDown ? (
+                  <p className="mt-1.5 text-sm text-fg-2">
+                    Check <span className="mono text-fg">FALKORDB_HOST</span>, <span className="mono text-fg">FALKORDB_USERNAME</span>{" "}
+                    and <span className="mono text-fg">FALKORDB_PASSWORD</span> in <span className="mono text-fg">backend/.env</span>.
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-sm text-fg-2">From the repository root:</p>
+                )}
+                <div className="mt-2">
+                  <CommandBlock command={START_COMMAND} />
+                </div>
+                {apiDown ? (
+                  <p className="mt-2 text-xs text-fg-3">
+                    Running the API elsewhere? Set <span className="mono">CUTLINE_API_URL</span> before starting the console.
+                  </p>
+                ) : null}
               </div>
-              {apiDown ? (
-                <p className="mt-2 text-xs text-fg-3">
-                  Running the API elsewhere? Set <span className="mono">CUTLINE_API_URL</span> before starting the console.
+            ) : (
+              <div>
+                <p className="label-micro">{apiDown ? "The API service" : "The API's FalkorDB settings"}</p>
+                <p className="mt-1.5 text-sm text-fg-2">
+                  {apiDown ? (
+                    <>
+                      The deployed API may be restarting or redeploying; this page keeps retrying. If it persists,
+                      check the API service&apos;s deploy logs and that the console&apos;s{" "}
+                      <span className="mono text-fg">CUTLINE_API_URL</span> points at it.
+                    </>
+                  ) : (
+                    <>
+                      Check <span className="mono text-fg">FALKORDB_HOST</span>,{" "}
+                      <span className="mono text-fg">FALKORDB_USERNAME</span> and{" "}
+                      <span className="mono text-fg">FALKORDB_PASSWORD</span> in the API service&apos;s environment
+                      variables, and that the FalkorDB instance is running.
+                    </>
+                  )}
                 </p>
-              ) : null}
-            </div>
+              </div>
+            )}
 
             <p className="text-xs text-fg-3">
               Nothing in this console is shown until the policy graph is reachable — no paths, counts or verification
