@@ -34,6 +34,20 @@ def unreachable_client(**overrides) -> TestClient:
     return TestClient(create_app(build_container(settings)))
 
 
+# ---------------------------------------------------------------------- probes
+def test_liveness_does_not_need_falkordb():
+    r = unreachable_client().get("/health")
+    assert r.status_code == 200 and r.json()["status"] == "ok"
+
+
+def test_readiness_reports_falkordb():
+    r = unreachable_client().get("/ready")
+    assert r.status_code == 503 and r.json()["falkordb"]["connected"] is False
+    _, client = memory_app()
+    r = client.get("/ready")
+    assert r.status_code == 200 and r.json()["status"] == "ready"
+
+
 # ---------------------------------------------------------------------- no internals in production
 @pytest.mark.parametrize("environment,leaks", [("production", False), ("development", True)])
 def test_unexpected_errors_hide_internals_in_production(environment, leaks):

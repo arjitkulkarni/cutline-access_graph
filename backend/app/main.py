@@ -83,6 +83,7 @@ def create_app(container: Container | None = None) -> FastAPI:
         message = "Internal server error." if settings.is_production else str(exc)
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": message}})
 
+    app.include_router(system.probes)
     app.include_router(system.router)
     app.include_router(graph.router)
     app.include_router(repairs.router)

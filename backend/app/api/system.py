@@ -1,17 +1,36 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from .. import __version__
 from ..container import Container
 from ..db import scenario
-from ..errors import FalkorUnavailable
+from ..errors import CutlineError, FalkorUnavailable
 from ..models.graph import PolicyRevision
 from ..models.repair import ActivityEvent, MutateRequest, MutateResponse
 from .deps import container
 
 router = APIRouter(prefix="/api", tags=["system"])
+probes = APIRouter(tags=["probes"])
+
+
+@probes.get("/health")
+async def liveness() -> dict[str, str]:
+    """Liveness: the process answers. Touches no dependency, so it is safe to poll often."""
+    return {"status": "ok", "version": __version__}
+
+
+@probes.get("/ready")
+def readiness(c: Container = Depends(container)) -> JSONResponse:
+    """Readiness: FalkorDB answers PING and GRAPH.LIST. 503 otherwise (for uptime monitors)."""
+    try:
+        latency = c.store.ping()
+    except CutlineError as exc:
+        return JSONResponse(status_code=503, content={"status": "unavailable", "falkordb": {
+            "connected": False, "error": exc.message}})
+    return JSONResponse(content={"status": "ready", "falkordb": {"connected": True, "latency_ms": latency}})
 
 
 class FalkorStatus(BaseModel):
