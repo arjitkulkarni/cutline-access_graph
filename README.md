@@ -360,3 +360,57 @@ docker compose up --build
 The API seeds the Customer Operations scenario into FalkorDB on first start, and runtime verification uses OPA as the
 enforcement point. Stop with `Ctrl+C`; `docker compose down` removes the containers (FalkorDB data in the container is
 discarded, and CUTLINE re-seeds on the next start). Continue with the [demo walkthrough](#demo-walkthrough).
+
+### Path B: run natively
+
+#### Step 1: start FalkorDB (choose one)
+
+**Option 1: FalkorDB in Docker**
+
+```bash
+docker run -d --name cutline-falkordb -p 6379:6379 -p 3001:3000 falkordb/falkordb:latest
+```
+
+The defaults in `backend/.env.example` (`FALKORDB_HOST=localhost`, `FALKORDB_PORT=6379`, no password) already point
+here. FalkorDB Browser is on http://localhost:3001.
+
+**Option 2: FalkorDB Cloud** (no Docker needed)
+
+1. Create a free instance at https://app.falkordb.cloud.
+2. From the instance's **Connectivity** tab copy the host, port and password. The default user is `falkordb`.
+3. Put them in `backend/.env` in Step 2. The free tier has no TLS, so keep `FALKORDB_TLS=false`.
+
+> A plain Redis server is **not** FalkorDB. If something else already listens on port 6379 (common on Windows), the API
+> reports "a Redis server without the FalkorDB module". Map FalkorDB to another port (`-p 6380:6379`) and set
+> `FALKORDB_PORT=6380`.
+
+#### Step 2: start the API
+
+macOS / Linux / Git Bash:
+
+```bash
+cd backend
+cp .env.example .env                       # then edit the FALKORDB_* lines if you use FalkorDB Cloud
+python3.11 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m scripts.falkordb_smoke                 # optional: checks every Cypher shape CUTLINE uses
+.venv/bin/python -m uvicorn app.main:app --port 8000      # seeds the scenario on first start
+```
+
+Windows PowerShell:
+
+```powershell
+cd backend
+Copy-Item .env.example .env                # then edit the FALKORDB_* lines if you use FalkorDB Cloud
+py -3.11 -m venv .venv
+.venv\Scripts\pip install -r requirements-dev.txt
+$env:PYTHONIOENCODING = "utf-8"            # the smoke script prints arrows
+.venv\Scripts\python -m scripts.falkordb_smoke             # optional: checks every Cypher shape CUTLINE uses
+.venv\Scripts\python -m uvicorn app.main:app --port 8000  # seeds the scenario on first start
+```
+
+On start-up the log shows `FalkorDB ready; active graph 'cutline_dev'`. The smoke test uses a uniquely named scratch
+graph and deletes only that graph, so it is safe to run against a shared instance.
+
+> Runtime verification sends real HTTP requests to this same API at `http://127.0.0.1:$BACKEND_PORT`. If you start
+> uvicorn on a port other than 8000, set `BACKEND_PORT` in `backend/.env` to the same number.
