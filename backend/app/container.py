@@ -11,6 +11,7 @@ from .services.access_analyzer import AccessAnalyzer
 from .services.authorization import PolicyDecisionPoint
 from .services.ledger import Ledger
 from .services.policy_service import PolicyService
+from .services.rate_limit import RunLimiter
 from .services.repair_planner import RepairPlanner
 from .services.repair_service import RepairService
 from .services.verifier import RuntimeVerifier
@@ -28,6 +29,7 @@ class Container:
     planner: RepairPlanner
     verifier: RuntimeVerifier
     repairs: RepairService
+    llm_limiter: RunLimiter
 
 
 def build_container(settings: Settings | None = None, store: GraphStore | None = None,
@@ -42,4 +44,5 @@ def build_container(settings: Settings | None = None, store: GraphStore | None =
     planner = RepairPlanner(store, settings)
     verifier = verifier or RuntimeVerifier(settings)
     repairs = RepairService(store, policy, planner, verifier, ledger, pdp, settings)
-    return Container(settings, client, store, ledger, policy, analyzer, pdp, planner, verifier, repairs)
+    llm_limiter = RunLimiter(settings.llm_runs_per_hour)
+    return Container(settings, client, store, ledger, policy, analyzer, pdp, planner, verifier, repairs, llm_limiter)

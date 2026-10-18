@@ -119,7 +119,8 @@ class AgentRunner:
 
     def run(self, req: InvestigateRequest) -> AgentRun:
         if self.c.settings.anthropic_api_key:
-            return self._run_llm(req)
+            with self.c.llm_limiter.run("LLM agent run"):
+                return self._run_llm(req)
         return self._run_deterministic(req)
 
     # ------------------------------------------------------------------ deterministic orchestrator

@@ -119,3 +119,60 @@ def test_unexpected_errors_hide_internals_in_production(environment, leaks):
     r = client.get("/api/graph")
     assert r.status_code == 500 and r.json()["error"]["code"] == "INTERNAL"
     assert ("/srv/secret" in r.text) is leaks
+
+
+# ---------------------------------------------------------------------- LLM agent guard rails
+def _text(text: str):
+    return SimpleNamespace(type="text", text=text)
+
+
+class FakeClaude:
+    """Stands in for anthropic.Anthropic: replays scripted responses or raises scripted errors."""
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.calls: list[dict] = []
+        self.options: list[dict] = []
+        self.beta = SimpleNamespace(messages=SimpleNamespace(create=self._create))
+
+    def with_options(self, **options):
+        self.options.append(options)
+        return self
+
+    def _create(self, **params):
+        self.calls.append(params)
+        item = self.script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def _error(cls, status: int):
+    request = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+    return cls("scripted", response=httpx2.Response(status, request=request), body=None)
+
+
+@pytest.fixture
+def fake_claude(monkeypatch):
+    holder = {}
+
+    def install(script):
+        holder["client"] = FakeClaude(script)
+        monkeypatch.setattr(anthropic, "Anthropic", lambda **_: holder["client"])
+        return holder["client"]
+
+    return install
+
+
+def test_llm_agent_runs_are_capped_per_hour(fake_claude):
+    fake_claude([SimpleNamespace(stop_reason="end_turn", content=[_text("first")])])
+    _, client = memory_app(anthropic_api_key="sk-test-not-real", llm_runs_per_hour=1)
+    assert client.post("/api/agent/investigate", json={}).status_code == 200
+    r = client.post("/api/agent/investigate", json={})
+    assert r.status_code == 429 and r.json()["error"]["code"] == "RATE_LIMITED"
+
+
+def test_deterministic_agent_is_not_rate_limited():
+    _, client = memory_app(llm_runs_per_hour=1)
+    for _ in range(2):
+        assert client.post("/api/agent/investigate", json={}).json()["mode"] == "deterministic"

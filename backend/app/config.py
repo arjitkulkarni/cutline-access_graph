@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     llm_model: str = "claude-opus-5-5"
     llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     llm_max_turns: int = 8
+    llm_runs_per_hour: int = 30  # 0 = no cap; protects the API key on a public deployment
 
     @field_validator("falkordb_username", "falkordb_password", "falkordb_tls_ca_cert", "opa_url", "anthropic_api_key",
                      "demo_api_base_url", "cors_origins", "cors_origin_regex", mode="before")
