@@ -527,3 +527,22 @@ before the reset is visibly stale.
 | `UnicodeEncodeError` in a Windows console | `$env:PYTHONIOENCODING = "utf-8"` before running scripts. |
 | Graph disappeared on FalkorDB Cloud free tier | Free instances have no persistence and stop when idle. CUTLINE re-seeds automatically on the next request. |
 | Port 3000 is taken | `npm run dev -- -p 3002` (the API needs no change; the console proxies `/api`). |
+
+---
+
+## Demo walkthrough
+
+The three-minute flow shown in the demo video, all in the console:
+
+1. **Breach.** `POST /demo/customers/export` as Maya returns `200`. "Support should never bulk-export customers."
+2. **Graph.** Access Graph → select `export_customers`: two highlighted routes from Support; Finance and the DSAR bot
+   have legitimate routes through the *same* roles.
+3. **Plan.** Repair Studio → **Generate safe repair**: the obvious fixes are rejected with counterexamples (Finance
+   close breaks; the other path stays open; DSAR fulfilment breaks).
+4. **Structural repair.** `support_safe` with exactly `view_orders` and `generate_reports`; Maya and Noah move to it.
+5. **Proof.** **Run verification**: Maya export `403`, Maya orders `200`, Felix export `200`, DSAR bot export `200`.
+6. **Approve and apply.** Revision r1 → r2 in one atomic write; post-apply checks pass; export the pytest suite.
+7. **Break it again.** **Introduce new export path** (a Contractor Tools role attached to Maya's role): the evidence
+   turns **stale**, apply is refused, the new path is traced, and the agent plans again and cuts only the new edge.
+8. **Agent.** Repair Studio → *Agent run* → **Run investigation**: the trace lists each tool the agent called and what
+   the graph returned.
