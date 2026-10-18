@@ -59,6 +59,13 @@ def create_app(container: Container | None = None) -> FastAPI:
     app.state.container = container or build_container()
     settings = app.state.container.settings
 
+    @app.middleware("http")
+    async def _no_store(request: Request, call_next):
+        # live policy state: never let a CDN or proxy (e.g. Vercel's rewrite cache) serve a stale answer
+        response = await call_next(request)
+        response.headers.setdefault("Cache-Control", "no-store")
+        return response
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app.state.container.settings.cors_origin_list,

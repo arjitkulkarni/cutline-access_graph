@@ -48,6 +48,12 @@ def test_readiness_reports_falkordb():
     assert r.status_code == 200 and r.json()["status"] == "ready"
 
 
+def test_api_responses_are_never_cacheable():
+    _, client = memory_app()
+    for path in ("/health", "/api/health", "/api/graph"):
+        assert client.get(path).headers["cache-control"] == "no-store", path
+
+
 # ---------------------------------------------------------------------- no internals in production
 @pytest.mark.parametrize("environment,leaks", [("production", False), ("development", True)])
 def test_unexpected_errors_hide_internals_in_production(environment, leaks):
