@@ -53,7 +53,7 @@ function ChallengeConsole() {
         <div className="flex items-center gap-3">
           <span className="font-mono text-[12px] text-[var(--lp-bone-3)]">
             policy{" "}
-            <span className={cn("inline-flex", stage >= 1 ? "text-[var(--lp-red)]" : "text-[var(--lp-bone)]")}>
+            <span className={cn("inline-flex items-center leading-none", stage >= 1 ? "text-[var(--lp-red)]" : "text-[var(--lp-bone)]")}>
               r<Odometer value={stage >= 1 ? "5" : "4"} />
             </span>{" "}
             · sha256:{stage >= 1 ? "02ce…" : "eb8b…"}

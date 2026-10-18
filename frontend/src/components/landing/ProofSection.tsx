@@ -32,15 +32,17 @@ function RequestLog() {
 
   return (
     <div ref={ref} className="lp-panel overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--lp-line-2)] px-5 py-3.5">
-        <p className="lp-mono-label">Runtime verification · candidate policy</p>
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--lp-line-2)] px-[14px] py-3.5 sm:px-5">
+        <p className="lp-mono-label min-w-0">
+          Runtime verification<span className="hidden sm:inline"> · candidate policy</span>
+        </p>
         <p className="font-mono text-[12px] tnum">
           <span className={shown === CHECKS.length ? "text-[var(--lp-bone)]" : "text-[var(--lp-red)]"}>{String(shown).padStart(2, "0")}</span>
           <span className="text-[var(--lp-bone-3)]"> / {CHECKS.length} passed</span>
         </p>
       </div>
       <div className="overflow-x-auto">
-        <div className="min-w-[520px]">
+        <div className="sm:min-w-[520px]">
           {CHECKS.map((c, i) => {
             const header = i === 0 || CHECKS[i - 1].group !== c.group;
             const ran = i < shown;
@@ -48,9 +50,9 @@ function RequestLog() {
               <Fragment key={i}>
                 {header ? <div className="lp-log-group">{GROUP_LABEL[c.group]}</div> : null}
                 <div className="lp-log-row" data-scan={i === shown - 1}>
-                  <span className="min-w-0 truncate">
-                    <span className="text-[var(--lp-bone)]">{c.who}</span>
-                    <span className="ml-2.5 font-mono text-[11.5px] text-[var(--lp-bone-3)]">
+                  <span className="min-w-0 sm:truncate">
+                    <span className="block text-[var(--lp-bone)] sm:inline">{c.who}</span>
+                    <span className="block truncate font-mono text-[10.5px] text-[var(--lp-bone-3)] sm:ml-2.5 sm:inline sm:text-[11.5px]">
                       {c.method} {c.path}
                     </span>
                   </span>

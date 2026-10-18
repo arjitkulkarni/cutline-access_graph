@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useReducedMotion } from "motion/react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/format";
@@ -9,6 +9,14 @@ import { MIGRATION } from "./data";
 import { Blade, Rise, Roll, Words } from "./primitives";
 
 const STAGE_NAMES = ["Breach", "Trace", "Reject", "Repair", "Verify"] as const;
+
+/** Phones get the top-to-bottom graph layout (matches the stage CSS breakpoint). */
+const PORTRAIT_QUERY = "(max-width: 767px)";
+const subscribePortrait = (onChange: () => void) => {
+  const mq = window.matchMedia(PORTRAIT_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+};
 
 /** One hero line, rendered twice and clipped along a diagonal so a red blade can part it. */
 function Slice({ text, n, className }: { text: string; n: 1 | 2; className?: string }) {
@@ -42,14 +50,18 @@ export function Story() {
   const [step, setStep] = useState<StoryStep>(0);
   const [attempt, setAttempt] = useState<RejectAttempt>("A");
   const [failed, setFailed] = useState(false);
+  // null until hydrated, so the scene is built once, in the right orientation.
+  const portrait = useSyncExternalStore(subscribePortrait, () => window.matchMedia(PORTRAIT_QUERY).matches, () => null);
 
-  // Mount the WebGL scene lazily (three.js stays out of the initial bundle).
+  // Mount the WebGL scene lazily (three.js stays out of the initial bundle). Rotating a phone
+  // across the breakpoint rebuilds it in the other layout.
   useEffect(() => {
+    if (portrait === null) return;
     let cancelled = false;
     import("./GraphScene")
       .then(({ createGraphScene }) => {
         if (cancelled || !mount.current || !labels.current) return;
-        handle.current = createGraphScene({ container: mount.current, labelLayer: labels.current, reducedMotion: reduced, onAttempt: setAttempt });
+        handle.current = createGraphScene({ container: mount.current, labelLayer: labels.current, reducedMotion: reduced, portrait, onAttempt: setAttempt });
         handle.current.setStep(stepRef.current);
       })
       .catch(() => !cancelled && setFailed(true));
@@ -58,7 +70,7 @@ export function Story() {
       handle.current?.dispose();
       handle.current = null;
     };
-  }, [reduced]);
+  }, [reduced, portrait]);
 
   useEffect(() => {
     stepRef.current = step;
@@ -78,7 +90,15 @@ export function Story() {
     return () => io.disconnect();
   }, []);
 
-  const stageName = step === 2 ? `Reject · attempt ${attempt}` : STAGE_NAMES[step];
+  const stageName =
+    step === 2 ? (
+      <>
+        Reject · <span className="hidden sm:inline">attempt </span>
+        {attempt}
+      </>
+    ) : (
+      STAGE_NAMES[step]
+    );
 
   return (
     <section ref={section} id="top" className="lp-story" aria-label="How CUTLINE repairs a dangerous permission">
@@ -102,11 +122,11 @@ export function Story() {
 
             <Rise delay={2.05}>
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                <a href="/overview" className="lp-btn lp-btn-primary">
+                <a href="/overview" className="lp-btn lp-btn-primary lp-btn--block">
                   <Roll>Open the console</Roll>
                   <ArrowRight size={15} aria-hidden />
                 </a>
-                <a href="#trace" className="lp-btn lp-btn-ghost">
+                <a href="#trace" className="lp-btn lp-btn-ghost lp-btn--block">
                   <Roll>Scroll the repair</Roll>
                   <ArrowDown size={15} aria-hidden />
                 </a>
@@ -144,7 +164,7 @@ export function Story() {
         <div className="lp-stage-vignette" aria-hidden />
         <div ref={labels} className="lp-stage-labels" aria-hidden />
         <div className="lp-stage-hud" aria-hidden>
-          <span className="lp-mono-label">
+          <span className="lp-mono-label whitespace-nowrap">
             <span className="text-[var(--lp-red)]">{String(step).padStart(2, "0")}</span> — {stageName}
           </span>
           <span className="lp-stage-ticks">

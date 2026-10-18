@@ -64,7 +64,7 @@ function CodeTabs() {
   const current = SNIPPETS.find((s) => s.id === tab)!;
   return (
     <div className="lp-panel flex flex-col overflow-hidden">
-      <div role="tablist" aria-label="Core Cypher" className="flex overflow-x-auto border-b border-[var(--lp-line-2)]">
+      <div role="tablist" aria-label="Core Cypher" className="lp-tablist flex overflow-x-auto border-b border-[var(--lp-line-2)]">
         {SNIPPETS.map((s) => (
           <button
             key={s.id}

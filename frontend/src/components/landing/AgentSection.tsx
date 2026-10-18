@@ -48,10 +48,12 @@ function AgentTerminal() {
   return (
     <div ref={ref} className="lp-term">
       <div className="lp-term-bar">
-        <span>POST /api/agent/investigate</span>
-        <span className="text-[var(--lp-bone-3)]">deterministic · recorded 16 Oct</span>
+        <span className="min-w-0 truncate">POST /api/agent/investigate</span>
+        <span className="shrink-0 text-[var(--lp-bone-3)]">
+          deterministic<span className="hidden sm:inline"> · recorded 16 Oct</span>
+        </span>
       </div>
-      <ol className="min-h-[392px] px-4 py-3 font-mono text-[12px] sm:px-5">
+      <ol className="min-h-[452px] px-4 py-3 font-mono text-[11.5px] sm:min-h-[392px] sm:px-5 sm:text-[12px]">
         {AGENT_RUN.map((s, i) => {
           const tl = timeline[i];
           if (t < tl.start) return null;
@@ -64,7 +66,7 @@ function AgentTerminal() {
               <span className="min-w-0">
                 <span className="text-[var(--lp-red-hi)]">{typed}</span>
                 {typing === i ? <span className="lp-caret" aria-hidden /> : null}
-                <span className={cn("mt-0.5 block truncate text-[var(--lp-bone-2)] transition-opacity duration-200", out ? "opacity-100" : "opacity-0")} title={s.out}>
+                <span className={cn("mt-0.5 block text-[var(--lp-bone-2)] transition-opacity duration-200 sm:truncate", out ? "opacity-100" : "opacity-0")} title={s.out}>
                   {s.out}
                 </span>
               </span>

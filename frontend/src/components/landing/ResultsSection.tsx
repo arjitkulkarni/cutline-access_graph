@@ -92,7 +92,7 @@ export function ResultsSection() {
         <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
           <Rise>
             <div className="lp-panel overflow-x-auto">
-              <table className="lp-table min-w-[560px]">
+              <table className="lp-table lp-table--stack lp-table--numbered sm:min-w-[560px]">
                 <thead>
                   <tr>
                     <th scope="col" className="w-[52px]">

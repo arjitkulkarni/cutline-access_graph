@@ -68,7 +68,7 @@ export function LandingNav() {
   }, [open]);
 
   return (
-    <header className={cn("lp-nav", (scrolled || open) && "lp-nav--scrolled")}>
+    <header className={cn("lp-nav", (scrolled || open) && "lp-nav--scrolled", open && "lp-nav--open")}>
       <motion.div className="lp-nav-progress" style={{ scaleX: progress }} aria-hidden />
       <div className="lp-container flex h-16 items-center gap-6">
         <a href="#top" className="flex items-center gap-3" aria-label="CUTLINE, back to top">
@@ -115,16 +115,19 @@ export function LandingNav() {
           >
             <div className="lp-container grid py-2">
               {NAV_LINKS.map((l, i) => (
-                <a
+                <motion.a
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
                   data-active={active === l.href}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, ease: EASE_CUT, delay: 0.08 + i * 0.04 }}
                   className="lp-nav-link lp-nav-link--block flex items-baseline gap-4 border-b border-[var(--lp-line)] last:border-b-0"
                 >
                   <span className="text-[var(--lp-red)]">{String(i + 1).padStart(2, "0")}</span>
                   {l.label}
-                </a>
+                </motion.a>
               ))}
             </div>
           </motion.nav>

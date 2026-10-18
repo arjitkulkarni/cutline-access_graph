@@ -106,7 +106,7 @@ export function IsolationSection() {
 
         <Rise className="mt-16">
           <div className="lp-panel overflow-x-auto">
-            <table className="lp-table min-w-[640px]">
+            <table className="lp-table lp-table--stack sm:min-w-[640px]">
               <thead>
                 <tr>
                   <th scope="col" className="w-[130px]">

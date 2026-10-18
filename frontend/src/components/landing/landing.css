@@ -207,8 +207,9 @@ html:has(.lp) {
 
 .lp-section {
   position: relative;
-  padding-block: 96px;
+  padding-block: 72px;
 }
+@media (min-width: 640px) { .lp-section { padding-block: 96px; } }
 @media (min-width: 1024px) { .lp-section { padding-block: 150px; } }
 
 /* ── Panels: square, hairline, and a red edge that cuts across on hover ────────────── */
@@ -230,7 +231,11 @@ html:has(.lp) {
   transform-origin: 0 50%;
   transition: transform 0.55s var(--lp-cut);
 }
-.lp-panel--cut:hover::after { transform: scaleX(1); }
+@media (hover: hover) { .lp-panel--cut:hover::after { transform: scaleX(1); } }
+/* Touch screens have no hover: the edge cuts across as the card scrolls in instead. */
+@media (hover: none) {
+  .lp-rise[data-in="true"] .lp-panel--cut::after { transform: scaleX(1); transition-delay: 0.35s; transition-duration: 0.8s; }
+}
 .lp-note {
   border-left: 2px solid var(--lp-red);
   padding: 4px 0 4px 16px;
@@ -254,19 +259,27 @@ html:has(.lp) {
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
-  transition: background-color 0.25s, border-color 0.25s, color 0.25s;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s, border-color 0.25s, color 0.25s, transform 0.18s var(--lp-out);
 }
+.lp-btn:active { transform: scale(0.97); }
 .lp-btn-primary { background: var(--lp-red); color: #fff; }
-.lp-btn-primary:hover { background: var(--lp-red-hi); }
 .lp-btn-ghost { border: 1px solid var(--lp-line-3); color: var(--lp-bone); }
-.lp-btn-ghost:hover { border-color: var(--lp-bone); }
 .lp-btn-sm { height: 36px; padding-inline: 14px; font-size: 11px; }
 .lp-roll { position: relative; display: inline-block; overflow: hidden; height: 1.25em; line-height: 1.25em; }
 .lp-roll > span { display: block; transition: transform 0.45s var(--lp-cut); }
 .lp-roll > span + span { position: absolute; top: 100%; left: 0; }
-.lp-btn:hover .lp-roll > span { transform: translateY(-100%); }
 .lp-btn svg { transition: transform 0.45s var(--lp-cut); }
-.lp-btn:hover svg { transform: translate(3px, 0); }
+@media (hover: hover) {
+  .lp-btn-primary:hover { background: var(--lp-red-hi); }
+  .lp-btn-ghost:hover { border-color: var(--lp-bone); }
+  .lp-btn:hover .lp-roll > span { transform: translateY(-100%); }
+  .lp-btn:hover svg { transform: translate(3px, 0); }
+}
+/* Hero calls to action: full-width, stacked, on phones. */
+@media (max-width: 479px) {
+  .lp-btn--block { width: 100%; justify-content: center; }
+}
 .lp-icon-btn {
   display: inline-grid;
   place-items: center;
@@ -293,6 +306,7 @@ html:has(.lp) {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+.lp-nav--open { background: var(--lp-ink); }
 .lp-nav-progress {
   position: absolute;
   left: 0;
@@ -342,9 +356,15 @@ html:has(.lp) {
   z-index: 5;
   align-self: start;
   height: 46vh;
+  height: 46svh;
   min-height: 300px;
   background: var(--lp-ink);
   border-bottom: 1px solid var(--lp-line);
+}
+/* Phones: the graph is laid out top to bottom (see GraphScene), so it can take more height. */
+@media (max-width: 767px) {
+  .lp-story-stage { height: 50vh; height: 50svh; min-height: 384px; max-height: 520px; }
+  .lp-stage-horizon { bottom: 4%; }
 }
 @media (min-width: 1024px) {
   .lp-story {
@@ -475,6 +495,7 @@ html:has(.lp) {
 .lp-gl-marker--bone { color: var(--lp-bone); border-color: rgb(236 230 220 / 0.3); }
 .lp-stage-labels[data-compact="true"] .lp-gl-marker { font-size: 8.5px; padding: 1px 4px; }
 .lp-stage-labels[data-compact="true"] .lp-gl-marker--opt { display: none; }
+.lp-stage-labels[data-portrait="true"] .lp-gl-marker--opt { display: block; }
 
 /* ── Hero headline: two lines, sliced by a red blade that parts and reseals the type ── */
 .lp-h1 {
@@ -652,6 +673,32 @@ html:has(.lp) {
   border-bottom: 1px solid var(--lp-line);
 }
 .lp-table tr:last-child td { border-bottom: 0; }
+/* Phones: each row becomes a card instead of a table that scrolls sideways. */
+@media (max-width: 639px) {
+  .lp-table--stack,
+  .lp-table--stack tbody,
+  .lp-table--stack tr,
+  .lp-table--stack td { display: block; }
+  .lp-table--stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .lp-table--stack tr { padding: 16px; border-bottom: 1px solid var(--lp-line); }
+  .lp-table--stack tr:last-child { border-bottom: 0; }
+  .lp-table--stack td { padding: 0; border: 0; width: auto; }
+  .lp-table--stack td + td { margin-top: 6px; }
+  .lp-table--stack .lp-pass-row { background: rgb(236 230 220 / 0.04); box-shadow: inset 2px 0 0 var(--lp-bone); }
+  .lp-table--stack .lp-pass-row td { background: none; box-shadow: none; }
+  /* Numbered variant: the index sits in its own column beside the text. */
+  .lp-table--numbered tr { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 8px; }
+  .lp-table--numbered td:first-child { grid-row: span 2; }
+  .lp-table--numbered td + td { margin-top: 0; }
+  .lp-table--numbered td:last-child { margin-top: 6px; font-size: 13.5px; }
+}
 .lp-verdict {
   display: inline-flex;
   align-items: center;
@@ -671,15 +718,19 @@ html:has(.lp) {
 .lp-log-row {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 56px 24px 56px 28px;
+  grid-template-columns: minmax(0, 1fr) 40px 12px 40px 18px;
   align-items: center;
-  gap: 8px;
-  padding: 11px 16px;
+  gap: 6px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--lp-line);
   font-size: 14px;
   overflow: hidden;
 }
-@media (min-width: 640px) { .lp-log-row { padding: 12px 20px; gap: 12px; } }
+.lp-log-row .lp-code-pill { min-width: 38px; padding-inline: 4px; }
+@media (min-width: 640px) {
+  .lp-log-row { grid-template-columns: minmax(0, 1fr) 56px 24px 56px 28px; padding: 12px 20px; gap: 12px; }
+  .lp-log-row .lp-code-pill { min-width: 40px; padding-inline: 6px; }
+}
 .lp-log-row::after {
   content: "";
   position: absolute;
@@ -694,7 +745,7 @@ html:has(.lp) {
 .lp-log-row[data-scan="true"]::after { animation: lp-scan 0.5s linear forwards; }
 @keyframes lp-scan { to { transform: translateX(380%); } }
 .lp-log-group {
-  padding: 18px 20px 8px;
+  padding: 18px 14px 8px;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.14em;
@@ -845,7 +896,14 @@ html:has(.lp) {
   color: var(--lp-bone-3);
   transition: color 0.2s;
 }
-.lp-tab:hover { color: var(--lp-bone-2); }
+@media (hover: hover) { .lp-tab:hover { color: var(--lp-bone-2); } }
+.lp-tablist { scrollbar-width: none; }
+.lp-tablist::-webkit-scrollbar { display: none; }
+@media (max-width: 639px) {
+  /* The last tab fades out at the edge, so it reads as "scroll for more". */
+  .lp-tablist { mask-image: linear-gradient(90deg, #000 82%, transparent); }
+  .lp-tab { padding-inline: 12px; }
+}
 .lp-tab[aria-selected="true"] { color: var(--lp-bone); }
 .lp-tab[aria-selected="true"]::after {
   content: "";
@@ -866,6 +924,7 @@ html:has(.lp) {
   line-height: 22px;
   color: #cfc8bd;
 }
+@media (max-width: 639px) { .lp-code { padding: 16px; font-size: 11.5px; line-height: 20px; } }
 .lp-code-line { white-space: pre; }
 .lp-tk-kw { color: var(--lp-red-hi); }
 .lp-tk-label { color: var(--lp-bone); font-weight: 500; }

@@ -22,6 +22,8 @@ export interface GraphSceneOptions {
   container: HTMLElement;
   labelLayer: HTMLElement;
   reducedMotion: boolean;
+  /** Phones: lay the graph out top to bottom (people above, capabilities below) to fill a narrow stage. */
+  portrait?: boolean;
   onAttempt?: (attempt: RejectAttempt) => void;
 }
 
@@ -38,13 +40,15 @@ interface NodeDef {
   kind: Kind;
   pos: [number, number, number];
   layer: number;
+  /** Label used in the portrait layout, where four people share one row. */
+  short?: string;
 }
 
 const NODES: NodeDef[] = [
-  { id: "felix", label: "felix · finance", kind: "principal", pos: [-3.5, 1.75, 0.35], layer: 0 },
+  { id: "felix", label: "felix · finance", short: "felix", kind: "principal", pos: [-3.5, 1.75, 0.35], layer: 0 },
   { id: "dsar", label: "dsar_bot", kind: "principal", pos: [-3.5, 0.6, -0.35], layer: 0 },
-  { id: "maya", label: "maya · support", kind: "principal", pos: [-3.5, -0.55, 0.4], layer: 0 },
-  { id: "noah", label: "noah · support", kind: "principal", pos: [-3.5, -1.7, -0.25], layer: 0 },
+  { id: "maya", label: "maya · support", short: "maya", kind: "principal", pos: [-3.5, -0.55, 0.4], layer: 0 },
+  { id: "noah", label: "noah · support", short: "noah", kind: "principal", pos: [-3.5, -1.7, -0.25], layer: 0 },
   { id: "finance", label: "Finance", kind: "role", pos: [-1.2, 1.45, -0.25], layer: 1 },
   { id: "support", label: "Support", kind: "role", pos: [-1.2, -0.05, 0.2], layer: 1 },
   { id: "support_safe", label: "Support (safe)", kind: "role", pos: [-1.05, -1.85, 0.55], layer: 1 },
@@ -232,9 +236,24 @@ interface EdgeView {
   slash?: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>;
 }
 
-export function createGraphScene({ container, labelLayer, reducedMotion, onAttempt }: GraphSceneOptions): GraphSceneHandle {
+/**
+ * The scenario is authored left to right (people → roles → capabilities). The portrait layout
+ * turns it a quarter so the flow runs top to bottom, keeping people in their row order. Linear,
+ * so mapping a curve's control points maps the whole curve.
+ */
+const PORTRAIT_X = 1.4;
+const PORTRAIT_Y = 0.7;
+const PORTRAIT_MID = -0.15; // centre of the authored y range
+function orienter(portrait: boolean) {
+  return (v: THREE.Vector3) => (portrait ? v.set(-(v.y - PORTRAIT_MID) * PORTRAIT_X, -v.x * PORTRAIT_Y, v.z) : v);
+}
+
+export function createGraphScene({ container, labelLayer, reducedMotion, portrait = false, onAttempt }: GraphSceneOptions): GraphSceneHandle {
+  const orient = orienter(portrait);
+  /** Orients an offset (no translation), for markers placed relative to a point. */
+  const offset = (x: number, y: number) => (portrait ? new THREE.Vector3(-y * PORTRAIT_X, -x * PORTRAIT_Y, 0) : new THREE.Vector3(x, y, 0));
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+  const dpr = Math.min(window.devicePixelRatio || 1, portrait ? 1.5 : 1.75);
   renderer.setPixelRatio(dpr);
   // Through EffectComposer the clear colour is sRGB-encoded twice (once when clearing the linear
   // render target, again by OutputPass), so #050505 came out as #262626. Store the value whose
@@ -299,7 +318,7 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
   const nodes = new Map<string, NodeView>();
   for (const def of NODES) {
     const group = new THREE.Group();
-    group.position.set(...def.pos);
+    group.position.copy(orient(new THREE.Vector3(...def.pos)));
     const core = new THREE.Mesh(solid[def.kind], track(new THREE.MeshBasicMaterial({ color: C.boneCore.clone(), transparent: true })));
     const wire = new THREE.LineSegments(wires[def.kind], track(new THREE.LineBasicMaterial({ color: C.boneDim.clone(), transparent: true })));
     const glow = new THREE.Sprite(
@@ -314,7 +333,7 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
     world.add(group);
     const label = document.createElement("div");
     label.className = `lp-gl-label lp-gl-label--${def.kind}`;
-    label.textContent = def.label;
+    label.textContent = portrait && def.short ? def.short : def.label;
     labelLayer.appendChild(label);
     nodes.set(def.id, { def, group, core, wire, glow, label });
   }
@@ -325,7 +344,7 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
     const a = new THREE.Vector3(...nodes.get(from)!.def.pos);
     const b = new THREE.Vector3(...nodes.get(to)!.def.pos);
     const ctrl = a.clone().lerp(b, 0.5).add(new THREE.Vector3(0, (b.y - a.y) * -0.12, 0.45));
-    const curve = new THREE.QuadraticBezierCurve3(a, ctrl, b);
+    const curve = new THREE.QuadraticBezierCurve3(orient(a), orient(ctrl), orient(b));
     const radius = kind === "new" ? 0.014 : 0.011;
     const tubes =
       kind === "cut"
@@ -340,7 +359,8 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
     if (kind === "cut") {
       slash = new THREE.Mesh(track(new THREE.BoxGeometry(0.03, 0.62, 0.03)), track(new THREE.MeshBasicMaterial({ color: C.red, transparent: true, opacity: 0 })));
       slash.position.copy(curve.getPoint(0.5));
-      slash.rotation.z = -0.42;
+      // Across the edge: edges run left to right in landscape, top to bottom in portrait.
+      slash.rotation.z = portrait ? Math.PI / 2 - 0.42 : -0.42;
       world.add(slash);
     }
     edges.set(`${from}>${to}`, { key: `${from}>${to}`, kind, curve, tubes, slash });
@@ -357,10 +377,10 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
   };
   const markers = [
     { el: marker("✕ detached", "bone"), at: () => edges.get("support>shared_ops")!.curve.getPoint(0.5, new THREE.Vector3()), channel: "ghostA" as const },
-    // Optional: hidden on phones, where it would sit on the Support label.
-    { el: marker("still open", "red", true), at: () => edges.get("support>export_helper")!.curve.getPoint(0.55, new THREE.Vector3()).add(new THREE.Vector3(0, -0.32, 0)), channel: "ghostA" as const },
+    // Optional: hidden on narrow landscape stages, where it would sit on the Support label.
+    { el: marker("still open", "red", true), at: () => edges.get("support>export_helper")!.curve.getPoint(0.55, new THREE.Vector3()).add(offset(0, -0.32)), channel: "ghostA" as const },
     { el: marker("✕ revoked", "bone"), at: () => edges.get("shared_ops>export")!.curve.getPoint(0.5, new THREE.Vector3()), channel: "ghostB" as const },
-    { el: marker("finance close breaks", "red"), at: () => new THREE.Vector3(...nodes.get("shared_ops")!.def.pos).add(new THREE.Vector3(0, 0.42, 0)), channel: "ghostB" as const },
+    { el: marker("finance close breaks", "red"), at: () => nodes.get("shared_ops")!.group.position.clone().add(offset(0, 0.42)), channel: "ghostB" as const },
   ];
 
   // ── Pulses and sparks ───────────────────────────────────────────────────────────────
@@ -418,13 +438,15 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
     camera.aspect = width / height;
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const compact = width < 560;
-    const needW = compact ? 10.4 : 9.4;
-    const needH = 5.2;
+    // Portrait: the graph spans about 5.3 × 4.9 units; leave room for labels above and below.
+    const needW = portrait ? 7.0 : compact ? 10.4 : 9.4;
+    const needH = portrait ? 6.4 : 5.2;
     const dist = Math.max(needW / (2 * tan * camera.aspect), needH / (2 * tan));
     camera.position.set(0, 0.05, dist);
-    camera.lookAt(0, -0.12, 0);
+    camera.lookAt(0, portrait ? 0.28 : -0.12, 0);
     camera.updateProjectionMatrix();
     labelLayer.dataset.compact = compact ? "true" : "false";
+    labelLayer.dataset.portrait = portrait ? "true" : "false";
   };
   fit();
 
@@ -560,8 +582,15 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
   const project = () => {
     for (const n of nodes.values()) {
       n.group.getWorldPosition(pt).project(camera);
-      const below = n.def.kind === "principal" ? 15 : 21; // clear the role/capability wireframes
-      n.label.style.transform = `translate3d(${((pt.x * 0.5 + 0.5) * width).toFixed(1)}px, ${((-pt.y * 0.5 + 0.5) * height).toFixed(1)}px, 0) translate(-50%, ${below}px)`;
+      // Below the node, clear of the role/capability wireframes. In portrait, people sit on the top
+      // row with their edges leaving downwards, so their names go above.
+      // The middle capability drops a line so three long names fit one row on a 360 px phone.
+      const below = n.def.kind === "principal" ? 15 : portrait && n.def.id === "reports" ? 33 : 21;
+      const shift = portrait && n.def.kind === "principal" ? "calc(-100% - 13px)" : `${below}px`;
+      // Portrait columns at the stage edges hang their labels inwards so they never clip.
+      const x = n.group.position.x;
+      const anchor = portrait && x < -2 ? "-14px" : portrait && x > 2 ? "calc(-100% + 14px)" : "-50%";
+      n.label.style.transform = `translate3d(${((pt.x * 0.5 + 0.5) * width).toFixed(1)}px, ${((-pt.y * 0.5 + 0.5) * height).toFixed(1)}px, 0) translate(${anchor}, ${shift})`;
     }
     for (const m of markers) {
       const p = m.at();
@@ -578,6 +607,9 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
     pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
   };
   if (!reducedMotion) window.addEventListener("pointermove", onPointer, { passive: true });
+  // Touch screens have no hover pointer, so the graph leans with the scroll instead.
+  let lastScroll = window.scrollY;
+  let scrollTilt = 0;
 
   // ── Loop ────────────────────────────────────────────────────────────────────────────
   let last = 0;
@@ -620,8 +652,13 @@ export function createGraphScene({ container, labelLayer, reducedMotion, onAttem
       sparkGeo.attributes.position.needsUpdate = true;
     }
 
+    const scrollY = window.scrollY;
+    const velocity = dt > 0 ? (scrollY - lastScroll) / dt : 0; // px per second
+    lastScroll = scrollY;
+    scrollTilt += (Math.max(-0.16, Math.min(0.16, velocity * 0.00016)) - scrollTilt) * 0.06;
+
     world.rotation.y += (Math.sin(elapsed * 0.1) * 0.18 + pointer.x * 0.14 - world.rotation.y) * 0.035;
-    world.rotation.x += (pointer.y * 0.06 + Math.sin(elapsed * 0.07) * 0.025 - world.rotation.x) * 0.035;
+    world.rotation.x += (pointer.y * 0.06 + Math.sin(elapsed * 0.07) * 0.025 + scrollTilt - world.rotation.x) * 0.035;
     world.position.y = Math.sin(elapsed * 0.45) * 0.035;
     dust.rotation.y = elapsed * 0.01;
 
