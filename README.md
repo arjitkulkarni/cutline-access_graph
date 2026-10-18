@@ -89,3 +89,76 @@ flowchart LR
 | Tool selection through MCP | The same tools are served by an MCP server; Claude chooses which to call |
 | Actions based on what the graph shows | Repairs are generated from the witness paths and applied as graph edits after approval |
 | Explainable results | Every rejected candidate carries a counterexample path or the workflow it breaks; every pass carries runtime evidence |
+
+---
+
+## Graph data model
+
+CUTLINE keeps three kinds of graph in FalkorDB. Names derive from `FALKORDB_GRAPH` (default `cutline_dev`).
+
+| Graph | Name | Holds | Lifetime |
+|---|---|---|---|
+| Active policy | `cutline_dev` | Users, roles, capabilities, resources, workflows, guardrails, policy revision | Seeded on first start |
+| Candidate | `cutline_dev__cand__<repair_id>__<n>` | A `GRAPH.COPY` of the active policy with one candidate repair applied | Created per candidate, deleted after use |
+| Ledger | `cutline_dev__ledger` | Repairs, the revisions they are based on, and an activity log (agent memory across sessions) | Created on first write |
+
+### Policy graph
+
+```mermaid
+graph LR
+  maya((Maya)) -- ASSIGNED_TO --> support[Support]
+  noah((Noah)) -- ASSIGNED_TO --> support
+  bot((DSAR Bot)) -- ASSIGNED_TO --> support
+  felix((Felix)) -- ASSIGNED_TO --> finance[Finance]
+  support -- INHERITS --> shared[Shared Ops]
+  support -- INHERITS --> helper[Export Helper]
+  finance -- INHERITS --> shared
+  support -- GRANTS --> vo{{view_orders}}
+  support -- GRANTS --> gr{{generate_reports}}
+  shared -- GRANTS --> ex{{export_customers}}
+  helper -- GRANTS --> ex
+  ex -- ACTS_ON --> cr[(customer_records)]
+  dsar[/DSAR fulfilment/] -- REQUIRES --> ex
+  close[/Finance close/] -- REQUIRES --> ex
+  guard{{no_support_bulk_export}} -- FORBIDS --> ex
+  guard -- APPLIES_TO --> maya
+  guard -- APPLIES_TO --> noah
+```
+
+**Node labels**
+
+| Label | Properties | Meaning |
+|---|---|---|
+| `User` | `id`, `name`, `department`, `principal_type` (`human` / `service`), `title` | A principal: a person or a service account |
+| `Role` | `id`, `name`, `description`, `origin` (`idp` / `cutline` / `challenge`) | A permission bundle; `origin = 'cutline'` marks roles CUTLINE created |
+| `Capability` | `id`, `name`, `sensitivity`, `method`, `endpoint` | An operation on the application (maps to an HTTP endpoint) |
+| `Resource` | `id`, `name`, `classification` | Data a capability acts on |
+| `Workflow` | `id`, `name`, `criticality`, `description` | A business process that must keep working (`must_allow`) |
+| `Guardrail` | `id`, `description` | A security rule that must hold (`must_deny`) |
+| `Policy` | `id = 'active'`, `revision`, `updated_at`, `scenario`, `last_change` | The revision boundary every plan and write is checked against |
+
+**Relationships** (direction matters: `A INHERITS B` means A receives B's grants)
+
+| Relationship | From → To | Meaning |
+|---|---|---|
+| `ASSIGNED_TO` | `User → Role` | The principal holds the role |
+| `INHERITS` | `Role → Role` | The role receives everything the parent role grants (transitively) |
+| `GRANTS` | `Role → Capability` | The role allows the operation |
+| `ACTS_ON` | `Capability → Resource` | The operation reads or writes this data |
+| `REQUIRES` | `Workflow → Capability` | The workflow needs this capability |
+| `PERFORMS` | `User → Workflow` | The principal carries out the workflow |
+| `FORBIDS` | `Guardrail → Capability` | The guardrail bans this capability … |
+| `APPLIES_TO` | `Guardrail → User` | … for these principals |
+
+**Effective access** is derived, never stored: a user can perform a capability if a path
+`(User)-[:ASSIGNED_TO]->(:Role)-[:INHERITS*0..6]->(:Role)-[:GRANTS]->(Capability)` exists. The **contract** is also
+derived from the graph: each `(Guardrail)-[:APPLIES_TO]->(User)` × `(Guardrail)-[:FORBIDS]->(Capability)` pair must be
+unreachable, and each `(User)-[:PERFORMS]->(Workflow)-[:REQUIRES]->(Capability)` pair must stay reachable.
+
+**Indexes and constraints.** A range index on `id` for every label, plus `GRAPH.CONSTRAINT` unique constraints on
+`User.id`, `Role.id` and `Capability.id`.
+
+**Seeded dataset.** The *Customer Operations* scenario ([backend/app/db/scenario.py](backend/app/db/scenario.py)):
+19 nodes (4 users, 4 roles, 3 capabilities, 3 resources, 3 workflows, 1 guardrail, 1 policy) and 25 relationships.
+All data is synthetic (Rule 6); no real people or customer records are loaded. The ten benchmark scenarios (this one
+plus nine variations) live in [backend/benchmarks/scenarios.py](backend/benchmarks/scenarios.py).
