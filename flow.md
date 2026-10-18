@@ -87,7 +87,7 @@ detection 11/12 vs direct-grant 7/12, median plan 1.46 s.
 
 ## 10. Docs & ops
 
-- ✅ `README.md` (judge-oriented, includes exact Cypher and real-FalkorDB results), `docs/DEPLOY.md`,
+- ✅ `README.md` (judge-oriented, includes exact Cypher and real-FalkorDB results), `docs/DEPLOYMENT.md`,
   `docker-compose.yml` (FalkorDB + OPA + API + console), `backend/Dockerfile`, `frontend/Dockerfile`, `.env.example`.
 - 🔄 `docs/CUTLINE_Winning_Blueprint.pdf` (analysis/rating/plan PDF — being authored by a background agent).
 
@@ -98,7 +98,7 @@ detection 11/12 vs direct-grant 7/12, median plan 1.46 s.
 1. ✅ Public repo: https://github.com/arjitkulkarni/cutline-access_graph (2026-10-17, 66 commits on `main`, pushed in
    9 batches). `backend/.env` is not committed; `deliverables/` (unrelated Digithon promo workspace) is excluded
    locally via `.git/info/exclude`. The benchmark report masks the FalkorDB Cloud hostname.
-2. ⚠️ Deploy (see `docs/DEPLOY.md`): API container + console, FalkorDB Cloud; keep the Free instance warm with an
+2. ⚠️ Deploy (see `docs/DEPLOYMENT.md`): API container + console, FalkorDB Cloud; keep the Free instance warm with an
    uptime ping on `/api/health` (it stops after 1 idle day and has no persistence; CUTLINE re-seeds automatically).
 3. ⚠️ Optional: set `ANTHROPIC_API_KEY` and run the agent once in LLM mode (show the Claude tool trace in the video).
 4. ⚠️ Record the 3-minute demo video (script in README → "Three-minute demo").
