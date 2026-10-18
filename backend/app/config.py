@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     llm_model: str = "claude-opus-5-5"
     llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     llm_max_turns: int = 8
+    # Each agent run must answer before the console's proxy gives up (Vercel waits 120 s for a first byte).
+    llm_time_budget_s: float = 100.0
     llm_runs_per_hour: int = 30  # 0 = no cap; protects the API key on a public deployment
 
     @field_validator("falkordb_username", "falkordb_password", "falkordb_tls_ca_cert", "opa_url", "anthropic_api_key",

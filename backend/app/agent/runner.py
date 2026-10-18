@@ -26,6 +26,7 @@ log = logging.getLogger("cutline.agent")
 
 AGENT_TOOL_NAMES = ["inspect_policy", "recall_history", "find_risks", "trace_access", "check_access", "get_contract",
                     "propose_repair", "verify_repair", "get_evidence", "export_regression_tests"]  # no apply_repair
+MIN_TURN_S = 5.0  # do not start a model call with less of the time budget left than this
 
 SYSTEM_PROMPT = """You are CUTLINE's investigation agent. CUTLINE repairs excessive permissions in a role-based \
 authorization graph stored in FalkorDB without breaking the business workflows that legitimately depend on them.
@@ -183,6 +184,7 @@ class AgentRunner:
         import anthropic  # imported lazily so the API runs without the SDK configured
 
         s = self.c.settings
+        deadline = time.monotonic() + s.llm_time_budget_s
         client = anthropic.Anthropic(api_key=s.anthropic_api_key)
         tools = [{"name": t.name, "description": t.description, "input_schema": t.input_schema}
                  for t in TOOLS if t.name in AGENT_TOOL_NAMES]
@@ -197,6 +199,12 @@ class AgentRunner:
         repair_id: str | None = None
         narrative, stop_reason = "", None
         for _ in range(s.llm_max_turns):
+            if deadline - time.monotonic() < MIN_TURN_S:
+                narrative = narrative or (
+                    f"Stopped at the {s.llm_time_budget_s:.0f} s time budget after {plural(len(steps), 'tool call')}. "
+                    "Every tool result above is complete; open Repair Studio to continue.")
+                stop_reason = "time_budget"
+                break
             response = client.beta.messages.create(
                 model=s.llm_model,
                 max_tokens=16000,

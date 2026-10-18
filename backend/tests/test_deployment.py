@@ -164,6 +164,13 @@ def fake_claude(monkeypatch):
     return install
 
 
+def test_llm_agent_stops_at_the_time_budget(fake_claude):
+    claude = fake_claude([])
+    _, client = memory_app(anthropic_api_key="sk-test-not-real", llm_time_budget_s=1.0)
+    run = client.post("/api/agent/investigate", json={}).json()
+    assert run["stop_reason"] == "time_budget" and claude.calls == []
+
+
 def test_llm_agent_runs_are_capped_per_hour(fake_claude):
     fake_claude([SimpleNamespace(stop_reason="end_turn", content=[_text("first")])])
     _, client = memory_app(anthropic_api_key="sk-test-not-real", llm_runs_per_hour=1)
