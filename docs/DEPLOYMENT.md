@@ -262,3 +262,18 @@ setting below. Templates: [`backend/.env.example`](../backend/.env.example) and
 | `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` | Railway's SIGTERM→SIGKILL window (platform setting) | Recommended | `25` | No |
 | `PORT`, `BACKEND_PORT` | Injected by Railway / derived by the container | **Do not set** | — | — |
 | `DEMO_API_BASE_URL` | Where runtime verification sends its requests | **Leave empty** (the API itself) | — | — |
+
+## 7. Local development vs production
+
+| | Local | Production |
+|---|---|---|
+| FalkorDB | Docker Compose `falkordb` service, or FalkorDB Cloud via `backend/.env` | FalkorDB Cloud via Railway variables |
+| API | `uvicorn app.main:app --port 8000` (reads `backend/.env`), or Compose | Railway, Dockerfile `CMD`, `$PORT`, non-root |
+| `ENVIRONMENT` | `development`: full error text, full FalkorDB host, localhost CORS by default | `production`: generic 500s, `[hidden]` host, CORS only for listed origins |
+| Console → API | `/api` proxied to `http://127.0.0.1:8000` (or `CUTLINE_API_URL`) | `/api` rewritten at Vercel's CDN to the Railway HTTPS URL |
+| Disconnected screen | Shows the local start command | Shows deployment guidance (no local commands) |
+| Graph name | `cutline_dev` | `cutline_prod` (dedicated) |
+| Tests | `pip install -r requirements-dev.txt && pytest` | Runtime image has no test dependencies |
+
+Docker Compose (`docker compose up --build`) still runs the full local stack (FalkorDB + OPA + API + console)
+unchanged.
