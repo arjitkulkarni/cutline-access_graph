@@ -171,6 +171,16 @@ def test_llm_agent_stops_at_the_time_budget(fake_claude):
     assert run["stop_reason"] == "time_budget" and claude.calls == []
 
 
+def test_llm_agent_reports_a_rejected_key_without_leaking_it(fake_claude):
+    fake_claude([_error(anthropic.AuthenticationError, 401)])
+    _, client = memory_app(anthropic_api_key="sk-test-not-real")
+    r = client.post("/api/agent/investigate", json={})
+    assert r.status_code == 200
+    run = r.json()
+    assert run["stop_reason"] == "api_error" and "401" in run["narrative"]
+    assert "sk-test" not in r.text
+
+
 def test_llm_agent_runs_are_capped_per_hour(fake_claude):
     fake_claude([SimpleNamespace(stop_reason="end_turn", content=[_text("first")])])
     _, client = memory_app(anthropic_api_key="sk-test-not-real", llm_runs_per_hour=1)

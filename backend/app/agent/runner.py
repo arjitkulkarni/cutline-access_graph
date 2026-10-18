@@ -205,17 +205,23 @@ class AgentRunner:
                     "Every tool result above is complete; open Repair Studio to continue.")
                 stop_reason = "time_budget"
                 break
-            response = client.beta.messages.create(
-                model=s.llm_model,
-                max_tokens=16000,
-                system=SYSTEM_PROMPT,
-                tools=tools,
-                messages=messages,
-                output_config={"effort": s.llm_effort},
-                cache_control={"type": "ephemeral"},  # tools + system are stable across turns
-                betas=["server-side-fallback-2026-07-01"],
-                fallbacks="default",
-            )
+            try:
+                response = client.beta.messages.create(
+                    model=s.llm_model,
+                    max_tokens=16000,
+                    system=SYSTEM_PROMPT,
+                    tools=tools,
+                    messages=messages,
+                    output_config={"effort": s.llm_effort},
+                    cache_control={"type": "ephemeral"},  # tools + system are stable across turns
+                    betas=["server-side-fallback-2026-07-01"],
+                    fallbacks="default",
+                )
+            except anthropic.APIError as exc:
+                log.warning("Claude API call failed: %s (request id %s)", exc.__class__.__name__,
+                            getattr(exc, "request_id", None))
+                narrative, stop_reason = api_error_text(exc, s.llm_model, len(steps)), "api_error"
+                break
             stop_reason = response.stop_reason
             if stop_reason == "refusal":
                 narrative = "The model declined this request; no tools were run after the refusal."
@@ -246,3 +252,23 @@ class AgentRunner:
             narrative = narrative or "Stopped after the maximum number of agent turns."
         return AgentRun(mode="llm", model=s.llm_model, steps=steps, repair_id=repair_id, narrative=narrative,
                         stop_reason=stop_reason)
+
+
+def api_error_text(exc: Exception, model: str, steps: int) -> str:
+    """Operator-facing reason for a failed Claude API call (never includes the key or raw response)."""
+    import anthropic
+
+    if isinstance(exc, anthropic.AuthenticationError):
+        why = "rejected ANTHROPIC_API_KEY (401); check the key set on the API service"
+    elif isinstance(exc, anthropic.PermissionDeniedError):
+        why = f"refused this key access to {model} (403)"
+    elif isinstance(exc, anthropic.NotFoundError):
+        why = f"does not know the model '{model}' (404); check LLM_MODEL"
+    elif isinstance(exc, anthropic.RateLimitError):
+        why = "rate-limited this run (429)"
+    elif isinstance(exc, anthropic.APIStatusError):
+        why = f"answered HTTP {exc.status_code}"
+    else:
+        why = "could not be reached"
+    done = f" after {plural(steps, 'tool call')}" if steps else ""
+    return f"The Claude API {why}, so the agent stopped{done}. Nothing was approved or applied."
