@@ -31,6 +31,12 @@ def configure_logging(settings: Settings) -> None:
     log.setLevel(settings.log_level.upper())
 
 
+def _shutdown(container: Container) -> None:
+    container.verifier.close()
+    if container.client is not None:
+        container.client.reset()  # closes the FalkorDB connection pool
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     container: Container = app.state.container
@@ -46,6 +52,11 @@ async def lifespan(app: FastAPI):
     except CutlineError as exc:
         log.warning("Policy graph not ready: %s", exc.message)
     yield
+    try:
+        await run_in_threadpool(_shutdown, container)
+        log.info("CUTLINE stopped; FalkorDB connections closed")
+    except Exception:  # noqa: BLE001 - shutdown must not raise
+        log.exception("error during shutdown")
 
 
 def create_app(container: Container | None = None) -> FastAPI:

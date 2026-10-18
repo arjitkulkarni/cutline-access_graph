@@ -54,6 +54,20 @@ def test_api_responses_are_never_cacheable():
         assert client.get(path).headers["cache-control"] == "no-store", path
 
 
+def test_lifespan_starts_without_falkordb_and_closes_connections_on_shutdown():
+    settings = Settings(_env_file=None, demo_mode=True, **UNREACHABLE)
+    container = build_container(settings)
+    _ = container.verifier.client  # open the runtime-verification HTTP client
+    resets = []
+    original_reset = container.client.reset
+    container.client.reset = lambda: (resets.append(True), original_reset())
+    with TestClient(create_app(container)) as client:  # runs startup, then shutdown on exit
+        assert client.get("/health").status_code == 200
+        before_shutdown = len(resets)
+    assert container.verifier._client is None
+    assert len(resets) == before_shutdown + 1  # the FalkorDB pool was closed by the shutdown hook
+
+
 # ---------------------------------------------------------------------- no internals in production
 @pytest.mark.parametrize("environment,leaks", [("production", False), ("development", True)])
 def test_unexpected_errors_hide_internals_in_production(environment, leaks):
