@@ -117,6 +117,12 @@ Cloud**. Guide: `docs/DEPLOYMENT.md` (dashboard settings, env tables, troublesho
   the full plan → verify 12/12 → approve → apply → challenge → stale lifecycle on FalkorDB Cloud (scratch graph
   `cutline_deploycheck`, deleted afterwards); `e2e-live.mjs` passed through `next start` against it; tsc, ESLint,
   `next build` clean. Not run: an actual `docker build` (no Docker on this machine), Railway/Vercel deploys.
+- 2026-10-18 night: alternative single-project deploy with **Vercel services** (`vercel.json`): `backend` (FastAPI,
+  Python 3.12, 120 s max duration) and `frontend` (Next.js, `CUTLINE_API_SAME_ORIGIN=1`); `/api`, `/demo`, `/health`,
+  `/ready`, `/docs`, `/openapi.json` route to the backend, everything else to the console. Runtime verification reaches
+  the backend's own `/demo/*` through a self-binding that injects `DEMO_API_BASE_URL`. Verified with `vercel dev -L`
+  on a scratch graph (deleted): all routes, plan, verify 12/12 over the binding; tests pass on 3.11 and 3.14.
+  ⚠️ Not yet deployed; `docs/DEPLOYMENT.md` and the README still describe Railway + Vercel.
 
 ---
 
