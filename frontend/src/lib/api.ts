@@ -1,7 +1,8 @@
 /**
  * Typed client for the CUTLINE REST API.
  *
- * All requests use relative `/api/...` URLs; next.config.ts rewrites them to CUTLINE_API_URL.
+ * All requests use relative `/api/...` URLs. With Vercel services the deployment routes them to its
+ * `backend` service; everywhere else next.config.ts rewrites them to CUTLINE_API_URL.
  * There is intentionally no mock adapter here: every value the console renders comes from
  * one of these calls.
  */

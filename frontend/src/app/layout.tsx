@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppShell } from "@/components/shell/AppShell";
+import { resolveApiTarget } from "@/lib/api-target";
 
 export const metadata: Metadata = {
   title: {
@@ -21,8 +22,8 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  // Read on the server so the disconnected state can show where the proxy points.
-  const apiTarget = (process.env.CUTLINE_API_URL ?? "http://127.0.0.1:8000").replace(/\/+$/, "");
+  // Read on the server so the disconnected state can show where /api requests go.
+  const apiTarget = resolveApiTarget();
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>

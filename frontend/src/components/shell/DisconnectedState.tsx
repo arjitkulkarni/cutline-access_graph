@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsFetching } from "@tanstack/react-query";
 import { Database, RotateCcw, ServerOff, type LucideIcon } from "lucide-react";
+import { SAME_ORIGIN_API } from "@/lib/api-target";
 import type { ConnectionState } from "@/lib/queries";
 import { qk } from "@/lib/queries";
 import { formatTime } from "@/lib/format";
@@ -49,7 +50,8 @@ export function DisconnectedState({
   const lastChecked = healthState?.errorUpdatedAt || healthState?.dataUpdatedAt || now;
 
   const apiDown = connection.phase === "unreachable";
-  const local = isLocalTarget(apiTarget);
+  const sameOrigin = apiTarget === SAME_ORIGIN_API;
+  const local = !sameOrigin && isLocalTarget(apiTarget);
   const Icon: LucideIcon = apiDown ? ServerOff : Database;
 
   return (
@@ -65,7 +67,12 @@ export function DisconnectedState({
                 {apiDown ? "The CUTLINE API is not reachable" : "FalkorDB is not connected"}
               </h1>
               <p className="mt-1 text-sm text-fg-2">
-                {apiDown ? (
+                {apiDown && sameOrigin ? (
+                  <>
+                    This deployment routes <span className="mono text-fg">/api</span> to its backend service and
+                    nothing answered there.
+                  </>
+                ) : apiDown ? (
                   <>
                     The console proxies <span className="mono text-fg">/api</span> to{" "}
                     <span className="mono text-fg">{apiTarget}</span> and nothing answered there.
@@ -115,7 +122,12 @@ export function DisconnectedState({
               <div>
                 <p className="label-micro">{apiDown ? "The API service" : "The API's FalkorDB settings"}</p>
                 <p className="mt-1.5 text-sm text-fg-2">
-                  {apiDown ? (
+                  {apiDown && sameOrigin ? (
+                    <>
+                      The backend service may be starting or redeploying; this page keeps retrying. If it persists,
+                      check the backend service&apos;s logs for this deployment in Vercel.
+                    </>
+                  ) : apiDown ? (
                     <>
                       The deployed API may be restarting or redeploying; this page keeps retrying. If it persists,
                       check the API service&apos;s deploy logs and that the console&apos;s{" "}
@@ -125,8 +137,11 @@ export function DisconnectedState({
                     <>
                       Check <span className="mono text-fg">FALKORDB_HOST</span>,{" "}
                       <span className="mono text-fg">FALKORDB_USERNAME</span> and{" "}
-                      <span className="mono text-fg">FALKORDB_PASSWORD</span> in the API service&apos;s environment
-                      variables, and that the FalkorDB instance is running.
+                      <span className="mono text-fg">FALKORDB_PASSWORD</span> in{" "}
+                      {sameOrigin
+                        ? "the Vercel project's environment variables (then redeploy)"
+                        : "the API service's environment variables"}
+                      , and that the FalkorDB instance is running.
                     </>
                   )}
                 </p>
