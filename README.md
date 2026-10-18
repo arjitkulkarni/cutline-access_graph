@@ -645,3 +645,23 @@ cutline/
 ├── docs/                         API contract, deployment guide, benchmark report, explainer PDF
 └── docker-compose.yml            FalkorDB + OPA + API + console
 ```
+
+## Production deployment
+
+The console runs on Vercel, the API on Railway (Docker), and the graphs on FalkorDB Cloud. Step-by-step dashboard
+settings, environment variables, troubleshooting and known limits are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Security design
+
+| Threat | Control |
+|---|---|
+| LLM invents or drops requirements | The NL contract is a proposal; the operator confirms; graph workflows are always merged in |
+| Agent mutates policy directly | Typed, allowlisted edits only; no Cypher tool; `apply` needs human approval |
+| Plan applied to an outdated graph | Revision compare-and-set in the write, plus content-hash drift detection |
+| Partial migration | A single atomic statement; all preconditions matched before any write |
+| Repair introduces new access | Effective-access diff on the candidate graph (`FAIL_NEW_PRIVILEGE`) |
+| Graph and runtime disagree | Verification fails; the independent engine reads only one-hop relations |
+| Arbitrary graph access via headers | `X-Cutline-Policy` resolves only `active` or a known repair's candidate graph |
+| Real customer data | Synthetic dataset only; the principal header is a demo selector, not authentication |
+| Public demo drains the LLM key | LLM runs capped per hour and 2 at a time, each within a 100 s budget; key only on the API |
+| Internals leak from a public API | Production errors are generic; FalkorDB host hidden; no secrets in the console build |
