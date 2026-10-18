@@ -665,3 +665,21 @@ settings, environment variables, troubleshooting and known limits are in [docs/D
 | Real customer data | Synthetic dataset only; the principal header is a demo selector, not authentication |
 | Public demo drains the LLM key | LLM runs capped per hour and 2 at a time, each within a 100 s budget; key only on the API |
 | Internals leak from a public API | Production errors are generic; FalkorDB host hidden; no secrets in the console build |
+
+## Supported semantics
+
+Supported: allow-only RBAC with role inheritance, named principals and capabilities, bounded depth (default 6).
+Not modelled: deny precedence, conditions/ABAC, time-bound grants, resource-scoped grants, cloud IAM policy languages.
+Unsupported constructs are not silently approximated: CUTLINE only claims what its declared model can prove.
+
+## AI tools disclosure
+
+This project was built during the hackathon window (October 15–18, 2026) with substantial help from **Claude Code**
+(Anthropic) as an AI coding assistant, used for research, code generation, tests and documentation. Every result
+quoted in this README was produced by running the code (test suite, smoke script and benchmarks against FalkorDB
+Cloud). The optional in-app agent calls the Claude API (Claude Opus 5.5) at runtime; it is not required to run the
+project.
+
+<!-- TODO (team): describe your own contribution here, e.g. the graph model, the scenario design, the repair
+algorithm choices, testing and the demo. Rule 12: you must be able to explain the graph model, the queries,
+the architecture and the technical decisions. -->
