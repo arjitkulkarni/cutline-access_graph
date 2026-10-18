@@ -206,7 +206,8 @@ class AgentRunner:
                 stop_reason = "time_budget"
                 break
             try:
-                response = client.beta.messages.create(
+                response = self._create(
+                    client, deadline,
                     model=s.llm_model,
                     max_tokens=16000,
                     system=SYSTEM_PROMPT,
@@ -253,6 +254,28 @@ class AgentRunner:
         return AgentRun(mode="llm", model=s.llm_model, steps=steps, repair_id=repair_id, narrative=narrative,
                         stop_reason=stop_reason)
 
+    @staticmethod
+    def _create(client: Any, deadline: float, **params: Any) -> Any:
+        """One model call inside the run's time budget, retried once for 429 / 5xx / connection errors.
+
+        The SDK's own retries are off: they would also retry timeouts and could overrun the budget.
+        """
+        import anthropic
+
+        for attempt in range(2):
+            try:
+                return client.with_options(timeout=max(deadline - time.monotonic(), 1.0), max_retries=0) \
+                    .beta.messages.create(**params)
+            except anthropic.APITimeoutError:
+                raise
+            except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+                transient = not isinstance(exc, anthropic.APIStatusError) or exc.status_code == 429 \
+                    or exc.status_code >= 500
+                if attempt or not transient or deadline - time.monotonic() < 2 * MIN_TURN_S:
+                    raise
+            time.sleep(1.0)
+        raise AssertionError("unreachable")  # the second attempt returns or raises
+
 
 def api_error_text(exc: Exception, model: str, steps: int) -> str:
     """Operator-facing reason for a failed Claude API call (never includes the key or raw response)."""
@@ -268,6 +291,8 @@ def api_error_text(exc: Exception, model: str, steps: int) -> str:
         why = "rate-limited this run (429)"
     elif isinstance(exc, anthropic.APIStatusError):
         why = f"answered HTTP {exc.status_code}"
+    elif isinstance(exc, anthropic.APITimeoutError):
+        why = "did not answer within the run's time budget"
     else:
         why = "could not be reached"
     done = f" after {plural(steps, 'tool call')}" if steps else ""

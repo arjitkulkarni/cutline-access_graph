@@ -164,6 +164,21 @@ def fake_claude(monkeypatch):
     return install
 
 
+def test_llm_agent_runs_tools_inside_the_time_budget(fake_claude):
+    claude = fake_claude([
+        SimpleNamespace(stop_reason="tool_use", content=[
+            SimpleNamespace(type="tool_use", id="tu_1", name="inspect_policy", input={})]),
+        SimpleNamespace(stop_reason="end_turn", content=[_text("Maya reaches export through Support.")]),
+    ])
+    _, client = memory_app(anthropic_api_key="sk-test-not-real")
+    run = client.post("/api/agent/investigate", json={}).json()
+    assert run["mode"] == "llm" and run["stop_reason"] == "end_turn"
+    assert [s["tool"] for s in run["steps"]] == ["inspect_policy"] and run["steps"][0]["ok"]
+    assert run["narrative"].startswith("Maya")
+    # every call carries a timeout bounded by the budget and no SDK retries
+    assert all(o["max_retries"] == 0 and 0 < o["timeout"] <= 100 for o in claude.options)
+
+
 def test_llm_agent_stops_at_the_time_budget(fake_claude):
     claude = fake_claude([])
     _, client = memory_app(anthropic_api_key="sk-test-not-real", llm_time_budget_s=1.0)
@@ -179,6 +194,15 @@ def test_llm_agent_reports_a_rejected_key_without_leaking_it(fake_claude):
     run = r.json()
     assert run["stop_reason"] == "api_error" and "401" in run["narrative"]
     assert "sk-test" not in r.text
+
+
+def test_llm_agent_retries_one_overload_then_succeeds(fake_claude, monkeypatch):
+    monkeypatch.setattr("app.agent.runner.time.sleep", lambda _: None)
+    claude = fake_claude([_error(anthropic.InternalServerError, 529),
+                          SimpleNamespace(stop_reason="end_turn", content=[_text("done")])])
+    _, client = memory_app(anthropic_api_key="sk-test-not-real")
+    run = client.post("/api/agent/investigate", json={}).json()
+    assert run["narrative"] == "done" and len(claude.calls) == 2
 
 
 def test_llm_agent_runs_are_capped_per_hour(fake_claude):
