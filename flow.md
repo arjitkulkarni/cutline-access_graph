@@ -2,7 +2,7 @@
 
 > Living log of what has been built, in what order, and what remains.
 > Updated at every milestone so work can stop at any point (the user asked to stop at ~40% weekly usage)
-> and resume from here. Last update: 2026-10-17 (night IST, deployment prep).
+> and resume from here. Last update: 2026-10-18 (evening IST, deployment prep pushed).
 
 Legend: ✅ done · 🔄 in progress · ⏳ not started · ⚠️ needs user action
 
@@ -125,6 +125,9 @@ Cloud**. Guide: `docs/DEPLOYMENT.md` (dashboard settings, env tables, troublesho
 1. ✅ Public repo: https://github.com/arjitkulkarni/cutline-access_graph (2026-10-17, 66 commits on `main`, pushed in
    9 batches). `backend/.env` is not committed; `deliverables/` (unrelated Digithon promo workspace) is excluded
    locally via `.git/info/exclude`. The benchmark report masks the FalkorDB Cloud hostname.
+   - 2026-10-18 evening: the deployment prep (§11), `docs/DEPLOYMENT.md` and the README rewrite pushed to `main` as
+     75 more commits, each pushed on its own (142 in total). Re-verified at the final tip: 83 backend tests pass
+     (5 env-gated skips), tsc, ESLint and `next build` clean. Still open in README: demo video and live URL.
 2. ⚠️ Deploy (code ready, see §11 and `docs/DEPLOYMENT.md`): Railway API + Vercel console + FalkorDB Cloud; needs
    the user's accounts. Keep the Free instance warm with an uptime ping on `/ready` (it stops after 1 idle day and
    has no persistence; CUTLINE re-seeds automatically).
