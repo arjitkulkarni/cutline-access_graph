@@ -9,8 +9,13 @@
         "app/main.py": { "maxDuration": 120 }
       },
       "bindings": [
-        { "type": "service", "service": "backend", "format": "url", "env": "DEMO_API_BASE_URL" }
+        { "type": "service", "service": "demo_app", "format": "url", "env": "DEMO_API_BASE_URL" }
       ]
+    },
+    "demo_app": {
+      "root": "backend/",
+      "framework": "fastapi",
+      "entrypoint": "app.demo_main:app"
     },
     "frontend": {
       "root": "frontend/",
@@ -20,7 +25,7 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": { "service": "backend" } },
-    { "source": "/demo/(.*)", "destination": { "service": "backend" } },
+    { "source": "/demo/(.*)", "destination": { "service": "demo_app" } },
     { "source": "/health", "destination": { "service": "backend" } },
     { "source": "/ready", "destination": { "service": "backend" } },
     { "source": "/docs", "destination": { "service": "backend" } },
