@@ -20,6 +20,7 @@ from .demo_app import customer_ops
 from .errors import CutlineError, FalkorUnavailable
 
 log = logging.getLogger("cutline")
+LOCAL_HOSTS = ("localhost", "127.0.0.1", "::1")
 
 
 def configure_logging(settings: Settings) -> None:
@@ -44,6 +45,8 @@ async def lifespan(app: FastAPI):
     configure_logging(s)
     log.info("CUTLINE %s starting (environment=%s, demo_mode=%s, authz_engine=%s, llm=%s)", __version__,
              s.environment, s.demo_mode, s.authz_engine, "on" if s.anthropic_api_key else "off")
+    if s.is_production and not s.falkordb_tls and s.falkordb_host not in LOCAL_HOSTS:
+        log.warning("FALKORDB_TLS is off: the FalkorDB password and graph data cross the network unencrypted")
     try:
         await run_in_threadpool(container.policy.ensure_ready)
         log.info("FalkorDB ready; active graph '%s'", container.store.active)
