@@ -57,6 +57,8 @@ def create_app(container: Container | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container or build_container()
+    settings = app.state.container.settings
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app.state.container.settings.cors_origin_list,
@@ -77,7 +79,9 @@ def create_app(container: Container | None = None) -> FastAPI:
     @app.exception_handler(Exception)
     async def _unexpected(_: Request, exc: Exception) -> JSONResponse:
         log.exception("unhandled error")
-        return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": str(exc)}})
+        # the traceback is in the server log; production clients get no internals
+        message = "Internal server error." if settings.is_production else str(exc)
+        return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": message}})
 
     app.include_router(system.router)
     app.include_router(graph.router)
